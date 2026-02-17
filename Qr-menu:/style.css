@@ -1,0 +1,21 @@
+body {
+    font-family: system-ui, sans-serif;
+    margin: 0;
+    padding: 16px;
+  }
+  
+  h1 {
+    text-align: center;
+  }
+  
+  .category {
+    margin-top: 24px;
+  }
+  
+  .product {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+  }
+  
