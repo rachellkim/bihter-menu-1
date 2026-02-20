@@ -1,51 +1,99 @@
-const API_URL = "https://spring-flower-9430menu-api.zynpsude-onder.workers.dev/menu";
+// Basit router: index mi category mi?
+const isCategoryPage = location.pathname.endsWith("category.html");
 
-async function getMenu() {
-  const r = await fetch(API);
-  return r.json();
+// Menü verisini buradan çekiyoruz.
+// Sende farklıysa (data/menu.json vb.) yolu değiştir.
+async function loadMenu() {
+  // Örn: ./data/menu.json
+  const res = await fetch("./data/menu.json", { cache: "no-store" });
+  if (!res.ok) throw new Error("Menü verisi yüklenemedi");
+  return res.json();
 }
 
-function qs(k) {
-  return new URLSearchParams(location.search).get(k);
+function getQueryParam(name) {
+  return new URLSearchParams(location.search).get(name);
 }
 
-function card(item) {
-  return `
-    <div class="card">
-      <div class="left">
-        <div class="name">${item.name || ""}</div>
-        <div class="desc">${item.descTR || ""}</div>
-      </div>
-      <div class="right">
-        <div class="price">${item.priceText || ""}</div>
-        ${item.photoUrl ? `<img src="${item.photoUrl}">` : ""}
-      </div>
-    </div>
-  `;
+// Fiyat formatı: ₺600
+function formatPrice(x) {
+  if (x == null) return "";
+  const s = String(x).trim();
+  if (!s) return "";
+  // $ gibi şeyleri temizle
+  const num = s.replace(/[^\d.,]/g, "");
+  return `₺${num}`;
 }
 
-async function home() {
-  const wrap = document.getElementById("cats");
+function safeText(x) {
+  return (x ?? "").toString().trim();
+}
+
+async function renderIndex() {
+  const data = await loadMenu();
+  const wrap = document.getElementById("categoryButtons");
   if (!wrap) return;
-  const data = await getMenu();
-  wrap.innerHTML = data.categories
-    .map(c => `<a href="category.html?slug=${c.slug}">${c.titleTR}</a>`)
-    .join("");
+
+  const cats = data.categories || [];
+  wrap.innerHTML = cats.map(c => {
+    const title = safeText(c.titleTR || c.title || "");
+    const slug = encodeURIComponent(safeText(c.slug || title));
+    return `<a class="menuBtn" href="./category.html?c=${slug}">${title}</a>`;
+  }).join("");
 }
 
-async function category() {
-  const slug = qs("slug");
-  const title = document.getElementById("title");
-  const list = document.getElementById("list");
-  if (!slug || !list) return;
-
-  const data = await getMenu();
-  const cat = data.categories.find(c => c.slug === slug);
-  if (!cat) return;
-
-  title.innerText = cat.titleTR;
-  list.innerHTML = cat.items.map(card).join("");
+function findCategory(data, slugOrTitle) {
+  const key = decodeURIComponent(slugOrTitle || "").toLowerCase();
+  return (data.categories || []).find(c => {
+    const t = safeText(c.slug || c.titleTR || c.title).toLowerCase();
+    return t === key;
+  }) || null;
 }
 
-home();
-category();
+async function renderCategory() {
+  const data = await loadMenu();
+  const slug = getQueryParam("c");
+  const cat = findCategory(data, slug);
+
+  const titleEl = document.getElementById("catTitle");
+  const subEl = document.getElementById("catSub");
+  const itemsEl = document.getElementById("items");
+
+  if (!cat) {
+    if (titleEl) titleEl.textContent = "Kategori bulunamadı";
+    if (itemsEl) itemsEl.innerHTML = "";
+    return;
+  }
+
+  if (titleEl) titleEl.textContent = safeText(cat.titleTR || cat.title);
+  if (subEl) subEl.textContent = safeText(cat.subtitleTR || " ");
+
+  const items = cat.items || [];
+  itemsEl.innerHTML = items.map(it => {
+    const name = safeText(it["Ürün Adı"] || it["Urun Adi"] || it.name);
+    const desc = safeText(it["Açıklama"] || it["Aciklama"] || it.descTR || it.desc);
+    const price = formatPrice(it["Fiyat"] || it.price || it.priceText);
+    const img = safeText(it["Foto"] || it.photoUrl || it.image || "");
+
+    return `
+      <div class="item">
+        <div class="itemMain">
+          <p class="itemName">${name}</p>
+          ${desc ? `<p class="itemDesc">${desc}</p>` : `<p class="itemDesc"></p>`}
+        </div>
+        <div class="itemRight">
+          <div class="price">${price}</div>
+          ${img ? `<img class="thumb" src="${img}" alt="">` : `<div class="thumb"></div>`}
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+(async () => {
+  try {
+    if (isCategoryPage) await renderCategory();
+    else await renderIndex();
+  } catch (e) {
+    console.error(e);
+  }
+})();
