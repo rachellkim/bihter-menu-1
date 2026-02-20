@@ -1,51 +1,51 @@
-(function () {
-  // Eğer category.html değilsek hiçbir şey yapma
-  const list = document.getElementById("product-list");
-  if (!list) return;
+const API = "https://spring-flower-9430menu-api.zynpsude-onder.workers.dev/";
 
-  const params = new URLSearchParams(window.location.search);
-  const category = params.get("cat");
+async function getMenu() {
+  const r = await fetch(API);
+  return r.json();
+}
 
-  const titleEl = document.getElementById("category-title");
-  const titles = {
-    "sicak-kahveler": "Sıcak Kahveler",
-    "soguk-kahveler": "Soğuk Kahveler",
-    "tatlilar": "Tatlılar",
-    "kahvaltiliklar": "Kahvaltılıklar"
-  };
+function qs(k) {
+  return new URLSearchParams(location.search).get(k);
+}
 
-  titleEl.textContent = titles[category] || "Kategori";
+function card(item) {
+  return `
+    <div class="card">
+      <div class="left">
+        <div class="name">${item.name || ""}</div>
+        <div class="desc">${item.descTR || ""}</div>
+      </div>
+      <div class="right">
+        <div class="price">${item.priceText || ""}</div>
+        ${item.photoUrl ? `<img src="${item.photoUrl}">` : ""}
+      </div>
+    </div>
+  `;
+}
 
-  fetch("data/products.json", { cache: "no-store" })
-    .then((res) => res.json())
-    .then((data) => {
-      const products = data[category] || [];
+async function home() {
+  const wrap = document.getElementById("cats");
+  if (!wrap) return;
+  const data = await getMenu();
+  wrap.innerHTML = data.categories
+    .map(c => `<a href="category.html?slug=${c.slug}">${c.titleTR}</a>`)
+    .join("");
+}
 
-      if (products.length === 0) {
-        list.innerHTML = `<p style="opacity:.7">Bu kategoride ürün yok.</p>`;
-        return;
-      }
+async function category() {
+  const slug = qs("slug");
+  const title = document.getElementById("title");
+  const list = document.getElementById("list");
+  if (!slug || !list) return;
 
-      list.innerHTML = products
-        .map(
-          (p) => `
-          <div class="product">
-            <div class="product-left">
-              <div class="product-name">${p.name || ""}</div>
-              <div class="product-desc">${p.desc || ""}</div>
-            </div>
+  const data = await getMenu();
+  const cat = data.categories.find(c => c.slug === slug);
+  if (!cat) return;
 
-            <div class="product-right">
-              <div class="product-price">${p.price || ""}</div>
-              ${p.image ? `<img class="product-img" src="${p.image}" alt="${p.name || ""}">` : ""}
-            </div>
-          </div>
-        `
-        )
-        .join("");
-    })
-    .catch((err) => {
-      console.error(err);
-      list.innerHTML = `<p style="color:#b00">Ürünler yüklenemedi.</p>`;
-    });
-})();
+  title.innerText = cat.titleTR;
+  list.innerHTML = cat.items.map(card).join("");
+}
+
+home();
+category();
