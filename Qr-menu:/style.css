@@ -85,3 +85,11 @@ body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial
   display: block;
   margin: 0 auto 12px; /* ortalar */
 }
+
+.logo{
+  width: 220px !important;   /* büyütmek için: 240 / 260 yapabilirsin */
+  max-width: 80% !important; /* mobilde taşmayı engeller */
+  height: auto !important;
+  display: block !important;
+  margin: 0 auto 14px !important; /* ortala */
+}
