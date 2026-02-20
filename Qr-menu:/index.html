@@ -1,14 +1,35 @@
 <!doctype html>
 <html lang="tr">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Menü</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
-  <h1>Menü</h1>
-  <div id="cats" class="cats"></div>
-  <script src="app.js"></script>
+  <div class="page">
+    <div class="phone">
+      <div class="hero" style="background-image:url('./assets/bg.jpg')">
+        <div class="wrap">
+          <div class="brand">
+            <!-- Logo dosyanı buraya koy -->
+            <img src="./assets/logo.png" alt="Bihter Çikolata & Kahve" />
+            <div class="tagline">Tatlıya bir aşk molası</div>
+            <div class="divider"></div>
+          </div>
+
+          <div class="menuBtns" id="categoryButtons"></div>
+        </div>
+
+        <div class="footer">
+          <a href="tel:+9005315832303" aria-label="Telefon">📞</a>
+          <a href="mailto:roccoinsaat@gmail.com" aria-label="E-posta">✉️</a>
+      
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="./app.js"></script>
 </body>
 </html>
