@@ -1,4 +1,4 @@
-const API = "https://spring-flower-9430menu-api.zynpsude-onder.workers.dev/";
+const API_URL = "https://spring-flower-9430menu-api.zynpsude-onder.workers.dev/menu";
 
 async function getMenu() {
   const r = await fetch(API);
