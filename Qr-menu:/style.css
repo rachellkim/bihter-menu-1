@@ -85,12 +85,12 @@ a{ color:inherit; text-decoration:none; }
 }
 
 /* Kategori butonları */
-.menuBtns{
-  display:flex;
-  flex-direction:column;
-  gap: 10px;
-  align-items:center;
-  margin-top: 10px;
+.menu-buttons{
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-items: center;
+  margin-top: 28px;
 }
 .menuBtn{
   width: 88%;
