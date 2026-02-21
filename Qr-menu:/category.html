@@ -1,31 +1,38 @@
-<!doctype html>
-<html lang="tr">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Kategori</title>
-  <link rel="stylesheet" href="/style.css?v=200" />
-</head>
+<script>
+(async () => {
+  const params = new URLSearchParams(window.location.search);
+  const catSlug = params.get("cat");
 
-<body>
-  <button id="toTopBtn" class="toTop" type="button" aria-label="Yukarı çık">
-    <span>⌃</span>
-  </button>
+  if (!catSlug) return;
 
-  <main class="screen">
-    <section class="card">
-      <header class="brand">
-        <h1 id="catTitle" class="pageTitle">Kategori</h1>
-        <div id="catSub" class="pageSub"> </div>
-        <div class="hr"></div>
-      </header>
+  const res = await fetch("/api/menu");
+  const data = await res.json();
 
-      <section id="items" class="items" aria-label="Ürünler"></section>
+  if (!data.ok) return;
 
-     
-    </section>
-  </main>
+  const category = data.categories.find(c => c.slug === catSlug);
 
-<script defer src="/app.js?v=200"></script>
-</body>
-</html>
+  if (!category) return;
+
+  document.querySelector("#categoryTitle").textContent =
+    category.titleTR;
+
+  const list = document.querySelector("#productList");
+  list.innerHTML = "";
+
+  category.items.forEach(item => {
+    const el = document.createElement("div");
+    el.className = "product";
+
+    el.innerHTML = `
+      <div class="product-info">
+        <div class="name">${item.name}</div>
+        <div class="desc">${item.desc || ""}</div>
+      </div>
+      <div class="price">${item.price || ""}</div>
+    `;
+
+    list.appendChild(el);
+  });
+})();
+</script>
