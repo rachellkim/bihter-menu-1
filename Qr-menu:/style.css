@@ -172,3 +172,40 @@ body {
   font-size: 22px;
   cursor: pointer;
 }
+
+.product-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  padding: 14px;
+}
+
+.product-info {
+  flex: 1;
+}
+
+.product-title {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.product-desc {
+  font-size: 13px;
+  color: #777;
+  margin-top: 4px;
+}
+
+.product-price {
+  font-weight: 700;
+  font-size: 15px;
+  margin-top: 6px;
+}
+
+/* FOTOĞRAF */
+.product-image {
+  width: 88px;      /* 🔥 BÜYÜTTÜK */
+  height: 88px;
+  border-radius: 12px;
+  object-fit: cover;
+}
