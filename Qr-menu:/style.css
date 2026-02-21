@@ -32,20 +32,37 @@ body {
   width: min(520px, 100%);
 }
 
+/* ====== ÜST LOGO / KATEGORİ GÖRSELİ (KÜÇÜLTTÜK) ====== */
 .brand{ text-align: center; }
+
+/* logo çok büyüktü → küçülttük */
 .logo{
-  width: 220px;
-  max-width: 80%;
+  width: 140px;          /* önce 220 idi */
+  max-width: 65%;
   height: auto;
   display: block;
-  margin: 0 auto 14px;
+  margin: 0 auto 12px;
 }
+
+/* eğer kategori sayfasında üstte büyük bir görsel varsa
+   (HTML’de class’ı yoksa eklemene gerek yok, ama varsa çalışır) */
+.category-hero img,
+.category-image{
+  width: 100%;
+  max-height: 170px;
+  object-fit: cover;
+  border-radius: 16px;
+  display: block;
+  margin: 0 auto 10px;
+}
+
 .tagline{
   margin: 0;
   font-size: 26px;
   font-weight: 600;
   letter-spacing: 0.5px;
 }
+
 .divider{
   width: 72%;
   height: 2px;
@@ -99,9 +116,10 @@ body {
   padding: 6px 0 18px;
 }
 
+/* ====== ÜRÜN KARTI: isim – fiyat – foto (foto daha büyük) ====== */
 .item{
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: 1fr auto; /* sol metin, sağ fiyat+foto */
   gap: 12px;
   padding: 14px 14px;
   background: rgba(255,255,255,0.75);
@@ -114,7 +132,7 @@ body {
 .itemName{
   margin: 0;
   font-size: 18px;
-  font-weight: 700;
+  font-weight: 800;
 }
 .itemDesc{
   margin: 6px 0 0;
@@ -123,23 +141,26 @@ body {
   line-height: 1.25rem;
 }
 
+/* sağ taraf: fiyat üstte, foto altta */
 .itemRight{
   display: grid;
   justify-items: end;
   align-content: start;
   gap: 10px;
-  min-width: 92px;
+  min-width: 104px;  /* foto büyüdüğü için artırdık (önce 92) */
 }
+
 .price{
-  font-weight: 800;
+  font-weight: 900;
   font-size: 16px;
   white-space: nowrap;
 }
 
+/* FOTOĞRAF: büyüttük */
 .thumb{
-  width: 54px;
-  height: 54px;
-  border-radius: 10px;
+  width: 82px;       /* önce 54 idi */
+  height: 82px;
+  border-radius: 14px;
   object-fit: cover;
   background: rgba(0,0,0,0.08);
   display: block;
@@ -173,39 +194,9 @@ body {
   cursor: pointer;
 }
 
-.product-card {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 14px;
-  padding: 14px;
-}
-
-.product-info {
-  flex: 1;
-}
-
-.product-title {
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.product-desc {
-  font-size: 13px;
-  color: #777;
-  margin-top: 4px;
-}
-
-.product-price {
-  font-weight: 700;
-  font-size: 15px;
-  margin-top: 6px;
-}
-
-/* FOTOĞRAF */
-.product-image {
-  width: 88px;      /* 🔥 BÜYÜTTÜK */
-  height: 88px;
-  border-radius: 12px;
-  object-fit: cover;
+/* mobilde daha iyi dengelensin */
+@media (max-width: 420px){
+  .thumb{ width: 74px; height: 74px; }
+  .itemRight{ min-width: 96px; }
+  .logo{ width: 125px; }
 }
