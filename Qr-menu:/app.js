@@ -1,6 +1,9 @@
-const page = location.pathname.split("/").pop();
-const isSubPage = page === "sub.html";
-const isCategoryPage = page === "category.html";
+// ✅ /sub ve /sub.html ikisini de yakala
+const path = location.pathname.replace(/\/$/, "");   // sondaki / varsa sil
+const page = path.split("/").pop();                  // sub, sub.html, category, category.html vs.
+
+const isSubPage = (page === "sub" || page === "sub.html");
+const isCategoryPage = (page === "category" || page === "category.html");
 
 function getQueryParam(name) {
   return new URLSearchParams(location.search).get(name);
