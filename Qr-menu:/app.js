@@ -5,8 +5,15 @@ const API_URL = "/api/menu";
 const qs = (k) => new URLSearchParams(location.search).get(k);
 const safe = (x) => (x ?? "").toString().trim();
 
+// slug normalize (EN KRİTİK KISIM)
+const norm = (s) =>
+  (s ?? "")
+    .toString()
+    .trim()
+    .toLowerCase()
+    .replace(/\/+$/, "");
+
 function isCategoryPath(pathname) {
-  // /category  veya /category/  veya /category.html gibi tüm varyasyonlar
   const p = (pathname || "").toLowerCase();
   return (
     p === "/category" ||
@@ -36,7 +43,7 @@ async function renderIndex() {
   wrap.innerHTML = categories
     .map(
       (c) => `
-      <a class="btn" href="/category?cat=${encodeURIComponent(c.slug)}">
+      <a class="btn" href="/category?cat=${encodeURIComponent(norm(c.slug))}">
         ${safe(c.titleTR)}
       </a>
     `
@@ -59,7 +66,7 @@ async function renderCategory() {
   }
 
   const categories = await loadMenu();
-  const cat = categories.find((c) => c.slug === slug);
+  const cat = categories.find((c) => norm(c.slug) === norm(slug));
 
   if (!cat) {
     titleEl.textContent = "Kategori bulunamadı";
@@ -70,7 +77,8 @@ async function renderCategory() {
   titleEl.textContent = safe(cat.titleTR);
 
   if (!cat.items || cat.items.length === 0) {
-    itemsWrap.innerHTML = "<p style='text-align:center'>Ürün bulunamadı</p>";
+    itemsWrap.innerHTML =
+      "<p style='text-align:center'>Ürün bulunamadı</p>";
     return;
   }
 
