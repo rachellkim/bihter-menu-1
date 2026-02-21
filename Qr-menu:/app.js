@@ -35,11 +35,11 @@ async function renderIndex() {
 
   const categories = await loadMenu();
 
-  // ✅ slug’ı API’den alıyoruz (tek doğru kaynak)
+  // ✅ linkleri /category şeklinde veriyoruz
   wrap.innerHTML = categories
     .map(
       (c) => `
-      <a class="btn" href="./category.html?cat=${encodeURIComponent(c.slug)}">
+      <a class="btn" href="/category?cat=${encodeURIComponent(c.slug)}">
         ${safe(c.titleTR)}
       </a>
     `
@@ -50,17 +50,24 @@ async function renderIndex() {
 // ===== CATEGORY (ÜRÜNLER) =====
 async function renderCategory() {
   const slugRaw = qs("cat");
-  if (!slugRaw) return;
-
   const slug = normSlug(slugRaw);
-
-  const categories = await loadMenu();
-
-  // ✅ hem link slug’ını hem API slug’ını normalize ederek eşleştiriyoruz
-  const cat = categories.find((c) => normSlug(c.slug) === slug);
 
   const titleEl = document.getElementById("catTitle");
   const itemsWrap = document.getElementById("items");
+
+  if (!titleEl || !itemsWrap) {
+    console.warn("catTitle veya items elementi yok. category.html içindeki id'leri kontrol et.");
+    return;
+  }
+
+  if (!slug) {
+    titleEl.textContent = "Kategori seçilmedi";
+    itemsWrap.innerHTML = "";
+    return;
+  }
+
+  const categories = await loadMenu();
+  const cat = categories.find((c) => normSlug(c.slug) === slug);
 
   if (!cat) {
     titleEl.textContent = "Kategori bulunamadı";
@@ -73,7 +80,6 @@ async function renderCategory() {
 
   if (!cat.items || cat.items.length === 0) {
     itemsWrap.innerHTML = "<p style='text-align:center'>Ürün bulunamadı</p>";
-    console.warn("Bu kategoride items boş:", cat.slug, cat.titleTR);
     return;
   }
 
@@ -96,7 +102,19 @@ async function renderCategory() {
 }
 
 // ===== ROUTER =====
-document.addEventListener("DOMContentLoaded", () => {
-  if (location.pathname.endsWith("category.html")) renderCategory();
-  else renderIndex();
+document.addEventListener("DOMContentLoaded", async () => {
+  try {
+    const path = location.pathname.replace(/\/+$/, ""); // sondaki / temizle
+
+    // ✅ /category ve /category.html ikisi de kategori sayfası
+    const isCategory =
+      path.endsWith("/category") ||
+      path.endsWith("/category.html") ||
+      path.includes("/category");
+
+    if (isCategory) await renderCategory();
+    else await renderIndex();
+  } catch (e) {
+    console.error("MENÜ HATASI:", e);
+  }
 });
