@@ -15,9 +15,7 @@ function normSlug(x) {
 function initToTop() {
   const btn = document.getElementById("toTopBtn");
   if (!btn) return;
-  btn.addEventListener("click", () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  });
+  btn.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
 }
 
 async function loadMenu() {
@@ -25,24 +23,13 @@ async function loadMenu() {
   if (!res.ok) throw new Error("API hata: " + res.status);
   const data = await res.json();
   if (!data?.ok) throw new Error(data?.error || "API ok:false");
-  return data; // {ok:true, categories:[...]}
+  return data;
 }
 
-function isIndex() {
-  const p = location.pathname.replace(/\/$/, "");
-  // / , /index.html, /tr/, /tr/index.html
-  return p === "" || p.endsWith("/index.html") || p.endsWith("/tr") || p.endsWith("/tr/index.html");
-}
-
+// ✅ /tr/ gibi prefix’leri de yakalayan router
 function isCategory() {
   const p = location.pathname.replace(/\/$/, "");
-  // /category, /category.html, /tr/category, /tr/category.html
-  return (
-    p.endsWith("/category") ||
-    p.endsWith("/category.html") ||
-    p.endsWith("/tr/category") ||
-    p.endsWith("/tr/category.html")
-  );
+  return p.endsWith("/category") || p.endsWith("/category.html");
 }
 
 async function renderIndex() {
@@ -54,11 +41,14 @@ async function renderIndex() {
     .slice()
     .sort((a, b) => Number(a.order ?? 9999) - Number(b.order ?? 9999));
 
-  wrap.innerHTML = cats.map((c) => {
-    const title = safe(c.titleTR || c.titleEN || c.slug);
-    const slug = encodeURIComponent(safe(c.slug || normSlug(title)));
-    return `<a class="btn" href="/category?cat=${slug}">${title}</a>`;
-  }).join("");
+  // ✅ önemli: /category yerine ./category
+  wrap.innerHTML = cats
+    .map((c) => {
+      const title = safe(c.titleTR || c.titleEN || c.slug);
+      const slug = encodeURIComponent(safe(c.slug || normSlug(title)));
+      return `<a class="btn" href="./category?cat=${slug}">${title}</a>`;
+    })
+    .join("");
 }
 
 async function renderCategory() {
@@ -66,7 +56,9 @@ async function renderCategory() {
   const catParam = qp("cat");
   const key = normSlug(decodeURIComponent(catParam || ""));
 
-  const cat = (data.categories || []).find((c) => normSlug(c.slug || c.titleTR) === key);
+  const cat = (data.categories || []).find(
+    (c) => normSlug(c.slug || c.titleTR) === key
+  );
 
   const titleEl = document.getElementById("catTitle");
   const itemsEl = document.getElementById("items");
@@ -80,30 +72,36 @@ async function renderCategory() {
   if (titleEl) titleEl.textContent = safe(cat.titleTR || cat.slug).toUpperCase();
 
   const items = cat.items || [];
-  itemsEl.innerHTML = items.map((it) => {
-    const name = safe(it.name);
-    const desc = safe(it.desc);
-    const price = safe(it.price);
-    const img = safe(it.image);
+  if (!itemsEl) return;
 
-    return `
-      <div class="item">
-        <div class="itemMain">
-          <p class="itemName">${name}</p>
-          ${desc ? `<p class="itemDesc">${desc}</p>` : `<p class="itemDesc"></p>`}
+  itemsEl.innerHTML = items
+    .map((it) => {
+      const name = safe(it.name);
+      const desc = safe(it.desc);
+      const price = safe(it.price);
+      const img = safe(it.image);
+
+      return `
+        <div class="item">
+          <div class="itemMain">
+            <p class="itemName">${name}</p>
+            ${desc ? `<p class="itemDesc">${desc}</p>` : `<p class="itemDesc"></p>`}
+          </div>
+          <div class="itemRight">
+            <div class="price">${price}</div>
+            ${img ? `<img class="thumb" src="${img}" alt="">` : `<div class="thumb"></div>`}
+          </div>
         </div>
-        <div class="itemRight">
-          <div class="price">${price}</div>
-          ${img ? `<img class="thumb" src="${img}" alt="">` : `<div class="thumb"></div>`}
-        </div>
-      </div>
-    `;
-  }).join("");
+      `;
+    })
+    .join("");
 }
 
 (async () => {
   try {
     initToTop();
+
+    // ✅ kategori sayfasındaysa category render
     if (isCategory()) await renderCategory();
     else await renderIndex();
   } catch (e) {
