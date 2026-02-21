@@ -1,75 +1,66 @@
-// ===== CONFIG =====
-const API_URL = "/api/menu";
+const isCategoryPage = location.pathname.endsWith("category.html");
 
-// ===== HELPERS =====
-const qs = (k) => new URLSearchParams(location.search).get(k);
-const safe = (x) => (x ?? "").toString().trim();
-
-// ===== LOAD MENU =====
+// ===== MENU LOAD =====
 async function loadMenu() {
-  const res = await fetch(API_URL, { cache: "no-store" });
-  if (!res.ok) throw new Error("API hata verdi");
-  const json = await res.json();
-  if (!json.ok) throw new Error("API ok=false");
-  return json.categories || [];
+  const res = await fetch("/api/menu", { cache: "no-store" });
+  if (!res.ok) throw new Error("Menü verisi yüklenemedi");
+  return res.json();
 }
 
-// ===== INDEX (ANA MENÜ) =====
+function getQueryParam(name) {
+  return new URLSearchParams(location.search).get(name);
+}
+
+function safeText(x) {
+  return (x ?? "").toString().trim();
+}
+
+// ===== INDEX =====
 async function renderIndex() {
+  const data = await loadMenu();
   const wrap = document.getElementById("categoryButtons");
   if (!wrap) return;
 
-  const categories = await loadMenu();
-
-  wrap.innerHTML = categories
-    .map(
-      (c) => `
-      <a class="btn" href="./category.html?cat=${encodeURIComponent(c.slug)}">
-        ${safe(c.titleTR)}
-      </a>
-    `
-    )
+  wrap.innerHTML = (data.categories || [])
+    .map((c) => {
+      const title = safeText(c.titleTR || c.title);
+      const slug = encodeURIComponent(c.slug);
+      return `<a class="menuBtn" href="./category.html?c=${slug}">${title}</a>`;
+    })
     .join("");
 }
 
-// ===== CATEGORY (ÜRÜNLER) =====
+// ===== CATEGORY =====
 async function renderCategory() {
-  const slug = qs("cat");
-  if (!slug) return;
+  const data = await loadMenu();
+  const slug = getQueryParam("c");
 
-  const categories = await loadMenu();
-  const cat = categories.find((c) => c.slug === slug);
-
-  const titleEl = document.getElementById("catTitle");
-  const itemsWrap = document.getElementById("items");
+  const cat = (data.categories || []).find(
+    (c) => c.slug === slug
+  );
 
   if (!cat) {
-    titleEl.textContent = "Kategori bulunamadı";
-    itemsWrap.innerHTML = "";
+    document.getElementById("catTitle").textContent = "Kategori bulunamadı";
     return;
   }
 
-  titleEl.textContent = safe(cat.titleTR);
+  document.getElementById("catTitle").textContent = cat.titleTR;
 
-  if (!cat.items || cat.items.length === 0) {
-    itemsWrap.innerHTML = "<p style='text-align:center'>Ürün bulunamadı</p>";
-    return;
-  }
-
-  itemsWrap.innerHTML = cat.items
+  const itemsEl = document.getElementById("items");
+  itemsEl.innerHTML = (cat.items || [])
     .map(
       (p) => `
       <div class="item">
         <div class="itemMain">
-          <div class="itemName">${safe(p.name)}</div>
-          ${p.desc ? `<div class="itemDesc">${safe(p.desc)}</div>` : ""}
+          <div class="itemName">${safeText(p.name)}</div>
+          ${p.desc ? `<div class="itemDesc">${safeText(p.desc)}</div>` : ""}
         </div>
         <div class="itemRight">
-          <div class="price">${safe(p.price)}</div>
+          <div class="price">${safeText(p.price)}</div>
           ${
             p.image
-              ? `<img class="thumb" src="${p.image}" alt="">`
-              : `<div class="thumb"></div>`
+              ? `<img class="thumb" src="${p.image}" />`
+              : ""
           }
         </div>
       </div>
@@ -79,10 +70,14 @@ async function renderCategory() {
 }
 
 // ===== ROUTER =====
-document.addEventListener("DOMContentLoaded", () => {
-  if (location.pathname.endsWith("category.html")) {
-    renderCategory();
-  } else {
-    renderIndex();
+document.addEventListener("DOMContentLoaded", async () => {
+  try {
+    if (isCategoryPage) {
+      await renderCategory();
+    } else {
+      await renderIndex();
+    }
+  } catch (err) {
+    console.error("MENÜ HATASI:", err);
   }
 });
