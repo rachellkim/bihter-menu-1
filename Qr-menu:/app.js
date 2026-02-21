@@ -30,13 +30,19 @@ async function loadMenu() {
 
 function isIndex() {
   const p = location.pathname.replace(/\/$/, "");
-  return p === "" || p.endsWith("/index.html") || p.endsWith("/");
+  // / , /index.html, /tr/, /tr/index.html
+  return p === "" || p.endsWith("/index.html") || p.endsWith("/tr") || p.endsWith("/tr/index.html");
 }
 
 function isCategory() {
   const p = location.pathname.replace(/\/$/, "");
-  const last = p.split("/").pop();
-  return last === "category" || last === "category.html";
+  // /category, /category.html, /tr/category, /tr/category.html
+  return (
+    p.endsWith("/category") ||
+    p.endsWith("/category.html") ||
+    p.endsWith("/tr/category") ||
+    p.endsWith("/tr/category.html")
+  );
 }
 
 async function renderIndex() {
