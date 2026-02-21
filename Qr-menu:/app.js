@@ -34,10 +34,7 @@ const MENU = [
       {
         slug: "espresso-bazli",
         titleTR: "Espresso Bazlı Kahveler",
-        items: [
-          { name: "Latte", descTR: "Espresso, süt", price: "600", image: "" },
-          { name: "Americano", descTR: "Espresso, sıcak su", price: "600", image: "" }
-        ]
+        
       },
       {
         slug: "aromali",
