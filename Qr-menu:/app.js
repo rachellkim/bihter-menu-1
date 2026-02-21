@@ -1,7 +1,7 @@
 // ===== CONFIG =====
 const API_URL = "/api/menu";
 
-// Ana sayfada görünecek 6 ANA kategori slug’ı (Airtable'daki slug(text))
+// 6 ana kategori slug (Airtable slug(text))
 const MAIN_SLUGS = [
   "soguk-kahveler",
   "sicak-icecekler",
@@ -11,17 +11,13 @@ const MAIN_SLUGS = [
   "kahvaltiliklar",
 ];
 
-/**
- * ANA -> ALT kategori eşlemesi (Airtable slug’larıyla)
- * Burayı sadece Airtable’daki slug’lara göre düzenleyeceksin.
- */
+// Ana -> Alt (Airtable slug’larıyla)
+// (Burayı kendi Airtable slug’larına göre düzenleyeceğiz)
 const SUB_MAP = {
   "sicak-kahveler": ["espresso-bazli", "aromali-ozel-kahveler", "filtreturk"],
   "soguk-kahveler": ["sogukbazli", "soguk-matchalar", "frappeler"],
-  // Aşağıdakiler sende alt kategori olarak yoksa boş bırakabilirsin
-  // veya bu ana kategorilerin ürünleri direkt category sayfasında gösterirsin.
-  "sicak-icecekler": [],     // ör: ["caylar", "bitki-caylari", "sahlep"] gibi
-  "soguk-icecekler": [],     // ör: ["limonatalar", "meyve-sulari", "churchill"] gibi
+  "sicak-icecekler": [],   // alt yoksa direkt ürün sayfasına gider
+  "soguk-icecekler": [],
   "tatlilar": [],
   "kahvaltiliklar": [],
 };
@@ -51,11 +47,11 @@ async function loadCategories() {
 function findCategory(categories, slugOrTitle) {
   if (!slugOrTitle) return null;
 
-  // önce slug ile dene
+  // 1) slug ile
   let cat = categories.find((c) => (c.slug || "") === slugOrTitle);
   if (cat) return cat;
 
-  // sonra titleTR ile (fallback)
+  // 2) titleTR ile fallback
   const needle = normTR(slugOrTitle);
   cat = categories.find((c) => normTR(c.titleTR) === needle);
   return cat || null;
@@ -77,41 +73,55 @@ function setupToTop() {
   toggle();
 }
 
-// ===== RENDER: INDEX (6 ANA KATEGORİ) =====
-async function renderIndex() {
+// ===== RENDER: INDEX (6 ANA) =====
+async function renderIndex(categories) {
   const btnWrap = document.getElementById("categoryButtons");
   if (!btnWrap) return;
 
-  const categories = await loadCategories();
-  const mains = categories.filter((c) => MAIN_SLUGS.includes(c.slug));
+  // Sadece 6 ana kategoriyi göster
+  const mains = categories
+    .filter((c) => MAIN_SLUGS.includes(c.slug))
+    .sort((a, b) => MAIN_SLUGS.indexOf(a.slug) - MAIN_SLUGS.indexOf(b.slug));
 
   btnWrap.innerHTML = mains
     .map(
       (c) => `
-      <a class="btn" href="/sub.html?main=${encodeURIComponent(c.slug)}">
-        ${c.titleTR || ""}
-      </a>
-    `
+        <a class="btn" href="/sub.html?main=${encodeURIComponent(c.slug)}">
+          ${c.titleTR || ""}
+        </a>
+      `
     )
     .join("");
+
+  // ÖNEMLİ: ana sayfada products render edilmesin
+  // (index (3).html içinde altta ekstra #items var; bunu ignore ediyoruz)
 }
 
-// ===== RENDER: SUB (ALT KATEGORİLER) =====
-async function renderSub() {
+// ===== RENDER: SUB (ALT KATEGORİ) =====
+async function renderSub(categories) {
   const subWrap = document.getElementById("subButtons");
   if (!subWrap) return;
 
-  const categories = await loadCategories();
   const mainSlug = qs("main");
-
   const mainCat = findCategory(categories, mainSlug);
+
   const heroText = document.getElementById("heroText");
   if (heroText) heroText.textContent = mainCat?.titleTR || "";
 
-  // Alt kategori listesi
+  const heroImg = document.getElementById("heroImg");
+  if (heroImg) {
+    // coverPhoto alanı varsa bas; yoksa gizle
+    if (mainCat?.coverPhoto) {
+      heroImg.src = mainCat.coverPhoto;
+      heroImg.style.display = "block";
+    } else {
+      heroImg.style.display = "none";
+    }
+  }
+
   const subSlugs = SUB_MAP[mainSlug] || [];
 
-  // Eğer mapping boşsa: direkt o ana kategoriyi ürün sayfasına yönlendir (fallback)
+  // alt yoksa direkt ürün sayfasına gönder (fallback)
   if (subSlugs.length === 0) {
     subWrap.innerHTML = `
       <a class="btn" href="/category/?cat=${encodeURIComponent(mainSlug)}">
@@ -121,7 +131,6 @@ async function renderSub() {
     return;
   }
 
-  // Airtable’da gerçekten var olan alt kategorileri filtrele
   const subs = subSlugs
     .map((slug) => categories.find((c) => c.slug === slug))
     .filter(Boolean);
@@ -129,23 +138,22 @@ async function renderSub() {
   subWrap.innerHTML = subs
     .map(
       (c) => `
-      <a class="btn" href="/category/?cat=${encodeURIComponent(c.slug)}">
-        ${c.titleTR || ""}
-      </a>
-    `
+        <a class="btn" href="/category/?cat=${encodeURIComponent(c.slug)}">
+          ${c.titleTR || ""}
+        </a>
+      `
     )
     .join("");
 }
 
-// ===== RENDER: CATEGORY (ÜRÜNLER) =====
-async function renderCategory() {
+// ===== RENDER: CATEGORY (ÜRÜN) =====
+async function renderCategory(categories) {
   const itemsWrap = document.getElementById("items");
   if (!itemsWrap) return;
 
   const catParam = qs("cat");
   if (!catParam) return;
 
-  const categories = await loadCategories();
   const cat = findCategory(categories, catParam);
 
   const titleEl = document.getElementById("catTitle");
@@ -160,21 +168,21 @@ async function renderCategory() {
   itemsWrap.innerHTML = cat.items
     .map(
       (p) => `
-      <div class="item">
-        <div class="itemMain">
-          <div class="itemName">${p.name || ""}</div>
-          ${p.desc ? `<div class="itemDesc">${p.desc}</div>` : ""}
+        <div class="item">
+          <div class="itemMain">
+            <div class="itemName">${p.name || ""}</div>
+            ${p.desc ? `<div class="itemDesc">${p.desc}</div>` : ""}
+          </div>
+          <div class="itemRight">
+            <div class="price">${p.price || ""}</div>
+            ${
+              p.image
+                ? `<img class="thumb" src="${p.image}" alt="">`
+                : `<div class="thumb"></div>`
+            }
+          </div>
         </div>
-        <div class="itemRight">
-          <div class="price">${p.price || ""}</div>
-          ${
-            p.image
-              ? `<img class="thumb" src="${p.image}" alt="">`
-              : `<div class="thumb"></div>`
-          }
-        </div>
-      </div>
-    `
+      `
     )
     .join("");
 }
@@ -182,5 +190,17 @@ async function renderCategory() {
 // ===== BOOT =====
 document.addEventListener("DOMContentLoaded", async () => {
   setupToTop();
-  await Promise.all([renderIndex(), renderSub(), renderCategory()]);
+
+  const categories = await loadCategories();
+
+  // Sayfaya göre doğru render
+  if (document.getElementById("categoryButtons")) {
+    await renderIndex(categories);
+  }
+  if (document.getElementById("subButtons")) {
+    await renderSub(categories);
+  }
+  if (document.getElementById("items") && qs("cat")) {
+    await renderCategory(categories);
+  }
 });
