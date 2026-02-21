@@ -1,38 +1,33 @@
-<script>
-(async () => {
-  const params = new URLSearchParams(window.location.search);
-  const catSlug = params.get("cat");
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Kategori</title>
+  <link rel="stylesheet" href="/style.css?v=301" />
+  <script defer src="/app.js?v=301"></script>
+</head>
 
-  if (!catSlug) return;
+<body>
+  <main class="screen">
+    <section class="card wide">
+      <header class="catHeader">
+        <a class="backLink" href="/" aria-label="Geri">← Menü</a>
+        <h1 id="catTitle" class="catTitle">KATEGORİ</h1>
+        <div class="divider small"></div>
+      </header>
 
-  const res = await fetch("/api/menu");
-  const data = await res.json();
-
-  if (!data.ok) return;
-
-  const category = data.categories.find(c => c.slug === catSlug);
-
-  if (!category) return;
-
-  document.querySelector("#categoryTitle").textContent =
-    category.titleTR;
-
-  const list = document.querySelector("#productList");
-  list.innerHTML = "";
-
-  category.items.forEach(item => {
-    const el = document.createElement("div");
-    el.className = "product";
-
-    el.innerHTML = `
-      <div class="product-info">
-        <div class="name">${item.name}</div>
-        <div class="desc">${item.desc || ""}</div>
+      <div id="items" class="items">
+        <!-- JS dolduracak -->
       </div>
-      <div class="price">${item.price || ""}</div>
-    `;
 
-    list.appendChild(el);
-  });
-})();
-</script>
+      <footer class="footer">
+        <a class="icon-btn" href="tel:+90XXXXXXXXXX" aria-label="Telefon">📞</a>
+        <a class="icon-btn" href="mailto:info@bihtercikolatakahve.com" aria-label="E-posta">✉️</a>
+      </footer>
+    </section>
+  </main>
+
+  <button id="toTopBtn" class="toTop" aria-label="Yukarı çık">⌃</button>
+</body>
+</html>
