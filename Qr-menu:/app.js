@@ -1,36 +1,23 @@
-// URL tespiti: /sub veya /sub.html, /category veya /category.html
-const path = location.pathname.replace(/\/$/, "");
-const page = path.split("/").pop();
-const isSubPage = (page === "sub" || page === "sub.html");
-const isCategoryPage = (page === "category" || page === "category.html");
-
-// ✅ Worker endpoint
 const API_URL = "/api/menu";
 
 function qp(name) {
   return new URLSearchParams(location.search).get(name);
 }
 
-function norm(x) {
-  return decodeURIComponent(String(x || ""))
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, "-");
+function safe(x) {
+  return (x ?? "").toString().trim();
 }
 
-function formatPriceTR(x) {
-  const s = String(x ?? "").trim();
-  if (!s) return "";
-  // worker zaten "600₺" veya "₺600" gibi string dönüyor, aynen bas
-  return s;
+function normSlug(x) {
+  return safe(x).toLowerCase().replace(/\s+/g, "-");
 }
 
 function initToTop() {
   const btn = document.getElementById("toTopBtn");
   if (!btn) return;
-  btn.addEventListener("click", () =>
-    window.scrollTo({ top: 0, behavior: "smooth" })
-  );
+  btn.addEventListener("click", () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
 }
 
 async function loadMenu() {
@@ -41,93 +28,78 @@ async function loadMenu() {
   return data; // {ok:true, categories:[...]}
 }
 
-function findCat(data, catSlug) {
-  const key = norm(catSlug);
-  return (data.categories || []).find((c) => norm(c.slug || c.titleTR) === key) || null;
+function isIndex() {
+  const p = location.pathname.replace(/\/$/, "");
+  return p === "" || p.endsWith("/index.html") || p.endsWith("/");
 }
 
-async function renderSub() {
+function isCategory() {
+  const p = location.pathname.replace(/\/$/, "");
+  const last = p.split("/").pop();
+  return last === "category" || last === "category.html";
+}
+
+async function renderIndex() {
   const data = await loadMenu();
-
-  const catSlug = qp("cat");
-  const cat = findCat(data, catSlug);
-
-  const heroImg = document.getElementById("heroImg");
-  const heroText = document.getElementById("heroText");
-  const wrap = document.getElementById("subButtons");
-
+  const wrap = document.getElementById("categoryButtons");
   if (!wrap) return;
 
-  if (!cat) {
-    if (heroText) heroText.textContent = "Kategori bulunamadı";
-    wrap.innerHTML = "";
-    return;
-  }
+  const cats = (data.categories || [])
+    .slice()
+    .sort((a, b) => Number(a.order ?? 9999) - Number(b.order ?? 9999));
 
-  // hero
-  if (heroImg) {
-    if (cat.coverPhoto) heroImg.src = cat.coverPhoto;
-    else heroImg.style.display = "none";
-  }
-  if (heroText) heroText.textContent = " "; // istersen cat içine tagline koyarız
-
-  // ✅ Senin Airtable yapında subcategory yok.
-  // Bu yüzden /sub sayfası sadece “kategori görseli + butonlar” gibi kullanılacaksa
-  // kategorinin items’larını ürün sayfasına yönlendiriyoruz:
-  // /category?cat=<slug>
-  location.href = `/category?cat=${encodeURIComponent(cat.slug || catSlug)}`;
+  wrap.innerHTML = cats.map((c) => {
+    const title = safe(c.titleTR || c.titleEN || c.slug);
+    const slug = encodeURIComponent(safe(c.slug || normSlug(title)));
+    return `<a class="btn" href="/category?cat=${slug}">${title}</a>`;
+  }).join("");
 }
 
 async function renderCategory() {
   const data = await loadMenu();
+  const catParam = qp("cat");
+  const key = normSlug(decodeURIComponent(catParam || ""));
 
-  const catSlug = qp("cat");
-  const cat = findCat(data, catSlug);
+  const cat = (data.categories || []).find((c) => normSlug(c.slug || c.titleTR) === key);
 
   const titleEl = document.getElementById("catTitle");
-  const subEl = document.getElementById("catSub");
   const itemsEl = document.getElementById("items");
 
   if (!cat) {
-    if (titleEl) titleEl.textContent = "Kategori bulunamadı";
+    if (titleEl) titleEl.textContent = "KATEGORİ BULUNAMADI";
     if (itemsEl) itemsEl.innerHTML = "";
     return;
   }
 
-  if (titleEl) titleEl.textContent = String(cat.titleTR || "").toUpperCase();
-  if (subEl) subEl.textContent = " ";
+  if (titleEl) titleEl.textContent = safe(cat.titleTR || cat.slug).toUpperCase();
 
-  const list = cat.items || [];
-  if (!itemsEl) return;
+  const items = cat.items || [];
+  itemsEl.innerHTML = items.map((it) => {
+    const name = safe(it.name);
+    const desc = safe(it.desc);
+    const price = safe(it.price);
+    const img = safe(it.image);
 
-  itemsEl.innerHTML = list
-    .map((it) => {
-      const name = String(it.name || "").trim();
-      const desc = String(it.desc || "").trim();
-      const price = formatPriceTR(it.price);
-      const img = String(it.image || "").trim();
-
-      return `
-        <div class="item">
-          <div class="itemMain">
-            <p class="itemName">${name}</p>
-            ${desc ? `<p class="itemDesc">${desc}</p>` : `<p class="itemDesc"></p>`}
-          </div>
-          <div class="itemRight">
-            <div class="price">${price}</div>
-            ${img ? `<img class="thumb" src="${img}" alt="">` : `<div class="thumb"></div>`}
-          </div>
+    return `
+      <div class="item">
+        <div class="itemMain">
+          <p class="itemName">${name}</p>
+          ${desc ? `<p class="itemDesc">${desc}</p>` : `<p class="itemDesc"></p>`}
         </div>
-      `;
-    })
-    .join("");
+        <div class="itemRight">
+          <div class="price">${price}</div>
+          ${img ? `<img class="thumb" src="${img}" alt="">` : `<div class="thumb"></div>`}
+        </div>
+      </div>
+    `;
+  }).join("");
 }
 
 (async () => {
   try {
     initToTop();
-    if (isSubPage) await renderSub();
-    if (isCategoryPage) await renderCategory();
+    if (isCategory()) await renderCategory();
+    else await renderIndex();
   } catch (e) {
     console.error(e);
   }
