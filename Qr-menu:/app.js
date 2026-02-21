@@ -1,72 +1,90 @@
-// ===== CONFIG =====
 const API_URL = "/api/menu";
-
-// ===== HELPERS =====
 const qs = (k) => new URLSearchParams(location.search).get(k);
-const safe = (x) => (x ?? "").toString().trim().toLowerCase();
 
-// ===== LOAD MENU =====
-async function loadMenu() {
-  const res = await fetch(API_URL, { cache: "no-store" });
-  const json = await res.json();
-  return json.categories || [];
+// --------------------
+// ANA SAYFA (6 KATEGORİ)
+// --------------------
+async function renderMainCategories() {
+  const res = await fetch(API_URL);
+  const data = await res.json();
+
+  const allowed = [
+    "soguk-kahveler",
+    "sicak-icecekler",
+    "sicak-kahveler",
+    "soguk-icecekler",
+    "tatlilar",
+    "kahvaltiliklar",
+  ];
+
+  const list = document.getElementById("categoryList");
+  if (!list) return;
+
+  data.categories
+    .filter(c => allowed.includes(c.slug))
+    .forEach(cat => {
+      const btn = document.createElement("a");
+      btn.className = "category-btn";
+      btn.href = `/sub.html?main=${cat.slug}`;
+      btn.textContent = cat.titleTR;
+      list.appendChild(btn);
+    });
 }
 
-// ===== RENDER =====
-async function render() {
-  const categories = await loadMenu();
+// --------------------
+// SUB SAYFASI (ALT KATEGORİLER)
+// --------------------
+async function renderSubCategories() {
+  const mainSlug = qs("main");
+  if (!mainSlug) return;
 
-  const catParam = qs("cat");
-  const btnWrap = document.getElementById("categoryButtons");
-  const itemsWrap = document.getElementById("items");
+  const res = await fetch(API_URL);
+  const data = await res.json();
 
-  // 👉 ANA MENÜ (kategori listesi)
-  if (btnWrap && !catParam) {
-    btnWrap.innerHTML = categories
-      .map(
-        (c) => `
-        <a class="btn" href="/?cat=${encodeURIComponent(c.titleTR)}">
-          ${c.titleTR}
-        </a>
-      `
-      )
-      .join("");
-    return;
-  }
+  const list = document.getElementById("subcategoryList");
+  if (!list) return;
 
-  // 👉 KATEGORİ + ÜRÜNLER
-  if (!itemsWrap) return;
-
-  const cat = categories.find(
-    (c) => safe(c.titleTR) === safe(catParam)
-  );
-
-  if (!cat || !cat.items || cat.items.length === 0) {
-    itemsWrap.innerHTML =
-      "<p style='text-align:center'>Ürün bulunamadı</p>";
-    return;
-  }
-
-  itemsWrap.innerHTML = cat.items
-    .map(
-      (p) => `
-      <div class="item">
-        <div class="itemMain">
-          <div class="itemName">${p.name}</div>
-          ${p.desc ? `<div class="itemDesc">${p.desc}</div>` : ""}
-        </div>
-        <div class="itemRight">
-          <div class="price">${p.price}</div>
-          ${
-            p.image
-              ? `<img class="thumb" src="${p.image}">`
-              : `<div class="thumb"></div>`
-          }
-        </div>
-      </div>
-    `
-    )
-    .join("");
+  data.categories
+    .filter(c => c.parentSlug === mainSlug)
+    .forEach(sub => {
+      const btn = document.createElement("a");
+      btn.className = "category-btn";
+      btn.href = `/category/?cat=${sub.slug}`;
+      btn.textContent = sub.titleTR;
+      list.appendChild(btn);
+    });
 }
 
-document.addEventListener("DOMContentLoaded", render);
+// --------------------
+// CATEGORY SAYFASI (ÜRÜNLER)
+// --------------------
+async function renderProducts() {
+  const catSlug = qs("cat");
+  if (!catSlug) return;
+
+  const res = await fetch(API_URL);
+  const data = await res.json();
+
+  const category = data.categories.find(c => c.slug === catSlug);
+  if (!category) return;
+
+  document.getElementById("categoryTitle").textContent = category.titleTR;
+
+  const list = document.getElementById("productList");
+  category.items.forEach(item => {
+    const div = document.createElement("div");
+    div.className = "product";
+    div.innerHTML = `
+      <div class="name">${item["Ürün Adı"]}</div>
+      <div class="price">${item["Fiyat"]} ₺</div>
+    `;
+    list.appendChild(div);
+  });
+}
+
+// --------------------
+document.addEventListener("DOMContentLoaded", () => {
+  renderMainCategories();
+  renderSubCategories();
+  renderProducts();
+});
