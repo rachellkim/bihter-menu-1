@@ -5,23 +5,8 @@ const API_URL = "/api/menu";
 const qs = (k) => new URLSearchParams(location.search).get(k);
 const safe = (x) => (x ?? "").toString().trim();
 
-// slug normalize (EN KRİTİK KISIM)
-const norm = (s) =>
-  (s ?? "")
-    .toString()
-    .trim()
-    .toLowerCase()
-    .replace(/\/+$/, "");
-
-function isCategoryPath(pathname) {
-  const p = (pathname || "").toLowerCase();
-  return (
-    p === "/category" ||
-    p === "/category/" ||
-    p.endsWith("/category") ||
-    p.endsWith("/category/") ||
-    p.endsWith("category.html")
-  );
+function isCategoryPage() {
+  return location.pathname.endsWith("category.html");
 }
 
 // ===== LOAD MENU =====
@@ -43,7 +28,9 @@ async function renderIndex() {
   wrap.innerHTML = categories
     .map(
       (c) => `
-      <a class="btn" href="/category?cat=${encodeURIComponent(norm(c.slug))}">
+      <a class="btn" href="/category.html?cat=${encodeURIComponent(
+        c.titleEN || c.titleTR
+      )}">
         ${safe(c.titleTR)}
       </a>
     `
@@ -53,20 +40,24 @@ async function renderIndex() {
 
 // ===== CATEGORY (ÜRÜNLER) =====
 async function renderCategory() {
-  const slug = qs("cat");
+  const catParam = qs("cat");
   const titleEl = document.getElementById("catTitle");
   const itemsWrap = document.getElementById("items");
 
   if (!titleEl || !itemsWrap) return;
 
-  if (!slug) {
-    titleEl.textContent = "Kategori seçilmedi";
-    itemsWrap.innerHTML = "";
+  if (!catParam) {
+    titleEl.textContent = "Kategori bulunamadı";
     return;
   }
 
   const categories = await loadMenu();
-  const cat = categories.find((c) => norm(c.slug) === norm(slug));
+
+  const cat = categories.find(
+    (c) =>
+      safe(c.titleTR).toLowerCase() === safe(catParam).toLowerCase() ||
+      safe(c.titleEN).toLowerCase() === safe(catParam).toLowerCase()
+  );
 
   if (!cat) {
     titleEl.textContent = "Kategori bulunamadı";
@@ -88,7 +79,11 @@ async function renderCategory() {
       <div class="item">
         <div class="itemMain">
           <div class="itemName">${safe(p.name)}</div>
-          ${p.desc ? `<div class="itemDesc">${safe(p.desc)}</div>` : ""}
+          ${
+            p.desc
+              ? `<div class="itemDesc">${safe(p.desc)}</div>`
+              : ""
+          }
         </div>
         <div class="itemRight">
           <div class="price">${safe(p.price)}</div>
@@ -107,7 +102,7 @@ async function renderCategory() {
 // ===== ROUTER =====
 document.addEventListener("DOMContentLoaded", async () => {
   try {
-    if (isCategoryPath(location.pathname)) {
+    if (isCategoryPage()) {
       await renderCategory();
     } else {
       await renderIndex();
