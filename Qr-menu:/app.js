@@ -28,7 +28,7 @@ function normKey(x){
 const MENU = [
   {
     slug: "sicak-kahveler",
-    heroImage: "https://images.unsplash.com/photo-1511920170033-f8396924c348?auto=format&fit=crop&w=1200&q=60",
+    heroImage: "https://static.wixstatic.com/media/b9ef37_591321c950a04888aca57bd8292104f2~mv2.jpg",
     heroText: "",
     subcategories: [
       {
