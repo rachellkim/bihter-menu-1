@@ -11,12 +11,13 @@ const MAIN_SLUGS = [
   "kahvaltiliklar",
 ];
 
-// ANA -> ALT kategori eşleşmesi (Airtable slug'larıyla birebir)
+/**
+ * ANA -> ALT kategori eşlemesi (Airtable slug'larıyla)
+ * Örn: "sicak-kahveler" tıklanınca 3 alt kategori butonu gösterecek.
+ */
 const SUB_MAP = {
-  "sicak-kahveler": ["espresso-bazli", "aromali-ozel-kahveler", "filtretturk"],
+  "sicak-kahveler": ["espresso-bazli", "aromali-ozel-kahveler", "filtreturk"],
   "soguk-kahveler": ["sogukbazli", "soguk-matchalar", "frappeler"],
-
-  // Alt kategori yoksa boş bırak (direkt ürün sayfasına gidecek)
   "sicak-icecekler": [],
   "soguk-icecekler": [],
   "tatlilar": [],
@@ -24,39 +25,16 @@ const SUB_MAP = {
 };
 
 // ===== HELPERS =====
-const qs = (k) => new URLSearchParams(location.search).get(k);
+const qs = (k) => new URLSearchParams(location.search).get(k) || "";
 
-function normTR(s = "") {
-  return String(s)
-    .toLowerCase()
-    .trim()
-    .replace(/ı/g, "i")
-    .replace(/ğ/g, "g")
-    .replace(/ü/g, "u")
-    .replace(/ş/g, "s")
-    .replace(/ö/g, "o")
-    .replace(/ç/g, "c");
+function normTR(s) {
+  return String(s || "").trim();
 }
 
-function priceText(p) {
-  if (p === null || p === undefined) return "";
-  const str = String(p).trim();
-  // "180" -> "180₺", "180₺" aynen kalsın
-  if (!str) return "";
-  return str.includes("₺") ? str : `${str}₺`;
-}
-
-async function getMenu() {
-  const res = await fetch(API_URL, { cache: "no-store" });
-  if (!res.ok) throw new Error("API hata: " + res.status);
-  return res.json();
-}
-
-// Menü datasında kategori slug'ını yakalamak için esnek bulucu
-function catSlug(cat) {
+// Airtable/worker'dan gelebilecek alan isimleri farklı olabiliyor: güvenli okuma
+function getSlug(cat) {
   return (
     cat?.slug ||
-    cat?.slugTR ||
     cat?.slugText ||
     cat?.["slug(text)"] ||
     cat?.["slug"] ||
@@ -64,155 +42,216 @@ function catSlug(cat) {
   );
 }
 
-function catTitleTR(cat) {
-  return cat?.titleTR || cat?.title || cat?.nameTR || cat?.name || "";
-}
-
-function catHeroUrl(cat) {
-  // Airtable'dan kapak foto alanına göre uyarlayabilirsin
+function getTitle(cat) {
   return (
-    cat?.coverPhoto ||
-    cat?.kapakFoto ||
-    cat?.imageUrl ||
-    cat?.photoUrl ||
-    cat?.["Kapak Foto"] ||
+    cat?.titleTR ||
+    cat?.["Kategori TR"] ||
+    cat?.title ||
+    cat?.name ||
+    getSlug(cat) ||
     ""
   );
 }
 
-function findCategory(data, slug) {
-  const target = normTR(slug);
-  return (data.categories || []).find((c) => normTR(catSlug(c)) === target);
+function getHeroUrl(cat) {
+  return (
+    cat?.coverUrl ||
+    cat?.coverPhotoUrl ||
+    cat?.heroUrl ||
+    cat?.kapakFotoUrl ||
+    cat?.["Kapak Foto"] ||
+    cat?.cover ||
+    ""
+  );
 }
 
-// Ürün alanları esnek
-function itemName(it) {
-  return it?.["Ürün Adı"] || it?.["Urun Adi"] || it?.name || it?.title || "";
-}
-function itemDescTR(it) {
-  return it?.["Açıklama TR"] || it?.["Aciklama TR"] || it?.descTR || it?.desc || "";
-}
-function itemPrice(it) {
-  return it?.["Fiyat"] || it?.price || it?.priceText || it?.["Price"] || "";
-}
-function itemPhoto(it) {
-  return it?.photoUrl || it?.imageUrl || it?.img || it?.["Foto"] || "";
+function formatPrice(p) {
+  const s = String(p ?? "").trim();
+  if (!s) return "";
+  // "180" -> "180₺"
+  if (/^\d+([.,]\d+)?$/.test(s)) return s.replace(",", ".") + "₺";
+  // "180₺" zaten öyleyse dokunma
+  return s;
 }
 
-// ===== RENDERERS =====
-function renderIndex(categories) {
-  const wrap = document.getElementById("buttons");
-  if (!wrap) return;
+function setHero(cat) {
+  const img = document.getElementById("heroImg");
+  const txt = document.getElementById("heroText");
+  if (!img && !txt) return;
 
-  // sadece 6 ana slug ve sırayla
-  const bySlug = new Map(categories.map((c) => [normTR(catSlug(c)), c]));
+  const title = getTitle(cat);
+  const url = getHeroUrl(cat);
 
-  wrap.innerHTML = MAIN_SLUGS.map((slug) => {
-    const c = bySlug.get(normTR(slug));
-    if (!c) return ""; // yoksa hiç basma
-    const title = catTitleTR(c) || slug;
-    return `<a class="btn" href="/sub.html?cat=${encodeURIComponent(slug)}">${title}</a>`;
-  }).join("");
-}
+  if (txt) txt.textContent = title;
 
-function renderSub(data, mainSlug) {
-  const cat = findCategory(data, mainSlug);
-
-  // başlık/hero
-  const titleEl = document.getElementById("catTitle2");
-  const heroEl = document.getElementById("catHero");
-
-  if (titleEl) titleEl.textContent = cat ? catTitleTR(cat) : mainSlug;
-  if (heroEl) {
-    const h = cat ? catHeroUrl(cat) : "";
-    if (h) {
-      heroEl.src = h;
-      heroEl.style.display = "block";
-    } else {
-      heroEl.style.display = "none";
-    }
+  if (img && url) {
+    img.src = url;
+    img.alt = title;
+    img.classList.add("is-visible");
   }
+}
 
-  const subs = SUB_MAP[mainSlug] || [];
+async function getMenu() {
+  const r = await fetch(API_URL, { cache: "no-store" });
+  if (!r.ok) throw new Error("Menu API hata: " + r.status);
+  return await r.json();
+}
 
-  // alt kategori yoksa direkt ürün sayfasına
-  if (!subs.length) {
-    location.replace(`/category/?cat=${encodeURIComponent(mainSlug)}`);
+function findCategory(data, slug) {
+  const cats = data?.categories || [];
+  return cats.find((c) => getSlug(c) === slug) || null;
+}
+
+// ===== RENDER: MAIN INDEX =====
+function renderIndex(data) {
+  const box = document.getElementById("categoryButtons");
+  if (!box) return;
+
+  // sırayla sadece MAIN_SLUGS göster
+  const catsBySlug = new Map((data?.categories || []).map((c) => [getSlug(c), c]));
+
+  box.innerHTML = "";
+  for (const slug of MAIN_SLUGS) {
+    const cat = catsBySlug.get(slug);
+    if (!cat) continue;
+
+    const title = getTitle(cat);
+    const hasSubs = Array.isArray(SUB_MAP[slug]) && SUB_MAP[slug].length > 0;
+    const href = hasSubs ? `/sub.html?main=${encodeURIComponent(slug)}` : `/category/?cat=${encodeURIComponent(slug)}`;
+
+    const a = document.createElement("a");
+    a.className = "btn";
+    a.href = href;
+    a.textContent = title;
+    box.appendChild(a);
+  }
+}
+
+// ===== RENDER: SUB PAGE =====
+function renderSub(data) {
+  const box = document.getElementById("subButtons");
+  if (!box) return;
+
+  const mainSlug = qs("main");
+  const mainCat = findCategory(data, mainSlug);
+  if (!mainCat) {
+    box.innerHTML = `<p style="text-align:center; opacity:.7;">Kategori bulunamadı.</p>`;
     return;
   }
 
-  const wrap = document.getElementById("subButtons");
-  if (!wrap) return;
+  setHero(mainCat);
 
-  wrap.innerHTML = subs
-    .map((subSlug) => {
-      const subCat = findCategory(data, subSlug);
-      const label = subCat ? catTitleTR(subCat) : subSlug;
-      return `<a class="btn" href="/category/?cat=${encodeURIComponent(subSlug)}">${label}</a>`;
-    })
-    .join("");
+  const subs = SUB_MAP[mainSlug] || [];
+  box.innerHTML = "";
+
+  // Eğer alt kategori listesi boşsa: direkt ana kategoriyi aç
+  if (!subs.length) {
+    location.href = `/category/?cat=${encodeURIComponent(mainSlug)}`;
+    return;
+  }
+
+  for (const subSlug of subs) {
+    const cat = findCategory(data, subSlug);
+    const title = cat ? getTitle(cat) : subSlug;
+
+    const a = document.createElement("a");
+    a.className = "btn";
+    a.href = `/category/?cat=${encodeURIComponent(subSlug)}`;
+    a.textContent = title;
+    box.appendChild(a);
+  }
 }
 
-function renderCategory(data, slug) {
-  const cat = findCategory(data, slug);
-
+// ===== RENDER: CATEGORY PAGE (PRODUCTS) =====
+function renderCategory(data) {
+  const itemsBox = document.getElementById("items");
   const titleEl = document.getElementById("catTitle");
-  if (titleEl) titleEl.textContent = cat ? catTitleTR(cat) : slug;
+  if (!itemsBox) return;
 
-  const list = document.getElementById("items");
-  if (!list) return;
+  const slug = qs("cat");
+  const cat = findCategory(data, slug);
+  if (!cat) {
+    itemsBox.innerHTML = `<p style="text-align:center; opacity:.7;">Kategori bulunamadı.</p>`;
+    return;
+  }
 
-  const items = (cat?.items || []).map((it) => {
-    const name = itemName(it);
-    const desc = itemDescTR(it);
-    const price = priceText(itemPrice(it));
-    const photo = itemPhoto(it);
+  setHero(cat);
+  if (titleEl) titleEl.textContent = normTR(getTitle(cat));
 
-    return `
-      <div class="item">
-        <div class="itemMain">
-          <h3 class="itemName">${name || ""}</h3>
-          ${desc ? `<div class="itemDesc">${desc}</div>` : ""}
-        </div>
+  const items = cat?.items || [];
+  itemsBox.innerHTML = "";
 
-        <div class="itemRight">
-          <div class="price">${price}</div>
-          ${photo ? `<img class="thumb" src="${photo}" alt="${name || ""}" loading="lazy">` : ""}
-        </div>
-      </div>
+  for (const it of items) {
+    const name = it?.["Ürün Adı"] || it?.["Urun Adi"] || it?.name || "";
+    const desc = it?.["Açıklama TR"] || it?.["Aciklama TR"] || it?.descTR || it?.desc || "";
+    const price = formatPrice(it?.price || it?.["Fiyat"] || it?.["Price"] || it?.priceText || "");
+    const imgUrl = it?.photoUrl || it?.imageUrl || it?.["Ürün Fotoğrafı"] || it?.["Urun Fotograf"] || "";
+
+    const card = document.createElement("article");
+    card.className = "item";
+
+    const left = document.createElement("div");
+    left.className = "itemMain";
+    left.innerHTML = `
+      <h3 class="itemName">${name}</h3>
+      ${desc ? `<p class="itemDesc">${desc}</p>` : ""}
     `;
-  });
 
-  list.innerHTML = items.join("") || `<div style="padding:12px;color:rgba(0,0,0,.6)">Bu kategoride ürün yok.</div>`;
+    const right = document.createElement("div");
+    right.className = "itemRight";
+
+    const p = document.createElement("div");
+    p.className = "price";
+    p.textContent = price;
+
+    const img = document.createElement("img");
+    img.className = "thumb";
+    img.alt = name;
+    if (imgUrl) {
+      img.src = imgUrl;
+    } else {
+      img.style.display = "none";
+    }
+
+    right.appendChild(p);
+    right.appendChild(img);
+
+    card.appendChild(left);
+    card.appendChild(right);
+
+    itemsBox.appendChild(card);
+  }
+}
+
+// ===== TO TOP =====
+function setupToTop() {
+  const btn = document.getElementById("toTopBtn");
+  if (!btn) return;
+
+  btn.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
+
+  window.addEventListener("scroll", () => {
+    btn.style.display = window.scrollY > 400 ? "block" : "none";
+  }, { passive: true });
+
+  btn.style.display = "none";
 }
 
 // ===== BOOT =====
-document.addEventListener("DOMContentLoaded", async () => {
+(async function init() {
   try {
+    setupToTop();
+
     const data = await getMenu();
 
-    // hangi sayfadayız?
-    const hasIndex = !!document.getElementById("buttons");
-    const hasSub = !!document.getElementById("subButtons");
-    const hasCat = !!document.getElementById("items");
+    // hangi sayfadaysak ona göre render
+    renderIndex(data);
+    renderSub(data);
+    renderCategory(data);
 
-    if (hasIndex) {
-      renderIndex(data.categories || []);
-      return;
-    }
-
-    if (hasSub) {
-      const mainSlug = qs("cat") || "";
-      renderSub(data, mainSlug);
-      return;
-    }
-
-    if (hasCat) {
-      const slug = qs("cat") || "";
-      renderCategory(data, slug);
-      return;
-    }
   } catch (e) {
     console.error(e);
+    const box = document.getElementById("categoryButtons") || document.getElementById("subButtons") || document.getElementById("items");
+    if (box) box.innerHTML = `<p style="text-align:center; color:#a00;">Yüklenemedi. (API / veri hatası)</p>`;
   }
-});
+})();
