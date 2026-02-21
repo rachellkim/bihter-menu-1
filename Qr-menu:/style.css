@@ -21,7 +21,7 @@ body {
   width: min(430px, 100%);
   background: rgba(255,255,255,0.80);
   border-radius: 26px;
-  padding: 26px 18px 18px;
+  padding: 22px 18px 18px;
   box-shadow: 0 12px 30px rgba(0,0,0,0.12);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
@@ -32,37 +32,21 @@ body {
   width: min(520px, 100%);
 }
 
-/* ====== ÜST LOGO / KATEGORİ GÖRSELİ (KÜÇÜLTTÜK) ====== */
+/* ---------- BRAND / LOGO (ana sayfa logosu) ---------- */
 .brand{ text-align: center; }
-
-/* logo çok büyüktü → küçülttük */
 .logo{
-  width: 140px;          /* önce 220 idi */
-  max-width: 65%;
+  width: 170px;          /* küçülttük */
+  max-width: 70%;
   height: auto;
   display: block;
   margin: 0 auto 12px;
 }
-
-/* eğer kategori sayfasında üstte büyük bir görsel varsa
-   (HTML’de class’ı yoksa eklemene gerek yok, ama varsa çalışır) */
-.category-hero img,
-.category-image{
-  width: 100%;
-  max-height: 170px;
-  object-fit: cover;
-  border-radius: 16px;
-  display: block;
-  margin: 0 auto 10px;
-}
-
 .tagline{
   margin: 0;
-  font-size: 26px;
+  font-size: 24px;
   font-weight: 600;
   letter-spacing: 0.5px;
 }
-
 .divider{
   width: 72%;
   height: 2px;
@@ -72,6 +56,16 @@ body {
 .divider.small{
   width: 60%;
   margin: 12px auto 10px;
+}
+
+/* ---------- KATEGORİ ÜSTÜ KAPAK GÖRSELİ (hero) ---------- */
+.hero{
+  width: 100%;
+  height: 190px;         /* 🔥 dev gibi olmasın */
+  object-fit: cover;
+  border-radius: 18px;
+  display: block;
+  margin: 0 auto 14px;
 }
 
 /* butonlar */
@@ -87,9 +81,9 @@ body {
   color: #fff;
   background: rgba(150, 55, 55, 0.70);
   padding: 16px 14px;
-  border-radius: 10px;
+  border-radius: 12px;
   font-size: 20px;
-  letter-spacing: 0.8px;
+  letter-spacing: 0.6px;
 }
 .btn:active{ transform: scale(0.99); }
 
@@ -116,11 +110,11 @@ body {
   padding: 6px 0 18px;
 }
 
-/* ====== ÜRÜN KARTI: isim – fiyat – foto (foto daha büyük) ====== */
+/* Ürün kartı: isim (sol) + fiyat/foto (sağ) */
 .item{
   display: grid;
-  grid-template-columns: 1fr auto; /* sol metin, sağ fiyat+foto */
-  gap: 12px;
+  grid-template-columns: 1fr auto;
+  gap: 14px;
   padding: 14px 14px;
   background: rgba(255,255,255,0.75);
   border-radius: 14px;
@@ -132,7 +126,7 @@ body {
 .itemName{
   margin: 0;
   font-size: 18px;
-  font-weight: 800;
+  font-weight: 750;
 }
 .itemDesc{
   margin: 6px 0 0;
@@ -141,25 +135,23 @@ body {
   line-height: 1.25rem;
 }
 
-/* sağ taraf: fiyat üstte, foto altta */
 .itemRight{
   display: grid;
   justify-items: end;
   align-content: start;
   gap: 10px;
-  min-width: 104px;  /* foto büyüdüğü için artırdık (önce 92) */
+  min-width: 120px;     /* foto büyüyünce yer aç */
 }
-
 .price{
-  font-weight: 900;
+  font-weight: 850;
   font-size: 16px;
   white-space: nowrap;
 }
 
-/* FOTOĞRAF: büyüttük */
+/* FOTOĞRAF (büyüttük) */
 .thumb{
-  width: 82px;       /* önce 54 idi */
-  height: 82px;
+  width: 86px;          /* 🔥 büyüdü */
+  height: 86px;
   border-radius: 14px;
   object-fit: cover;
   background: rgba(0,0,0,0.08);
@@ -194,9 +186,10 @@ body {
   cursor: pointer;
 }
 
-/* mobilde daha iyi dengelensin */
+/* Mobilde daha da derli toplu */
 @media (max-width: 420px){
-  .thumb{ width: 74px; height: 74px; }
-  .itemRight{ min-width: 96px; }
-  .logo{ width: 125px; }
+  .hero{ height: 160px; }
+  .thumb{ width: 78px; height: 78px; }
+  .itemRight{ min-width: 110px; }
+  .tagline{ font-size: 22px; }
 }
