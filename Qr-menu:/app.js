@@ -1,66 +1,82 @@
-const isCategoryPage = location.pathname.endsWith("category.html");
+// ===== CONFIG =====
+const API_URL = "/api/menu";
 
-// ===== MENU LOAD =====
+// ===== HELPERS =====
+const qs = (k) => new URLSearchParams(location.search).get(k);
+const safe = (x) => (x ?? "").toString().trim();
+
+// ===== LOAD MENU =====
 async function loadMenu() {
-  const res = await fetch("/api/menu", { cache: "no-store" });
-  if (!res.ok) throw new Error("Menü verisi yüklenemedi");
-  return res.json();
+  const res = await fetch(API_URL, { cache: "no-store" });
+  if (!res.ok) throw new Error("API hata verdi");
+  const json = await res.json();
+  if (!json.ok) throw new Error("API ok=false");
+  return json.categories || [];
 }
 
-function getQueryParam(name) {
-  return new URLSearchParams(location.search).get(name);
-}
-
-function safeText(x) {
-  return (x ?? "").toString().trim();
-}
-
-// ===== INDEX =====
+// ===== INDEX (ANA MENÜ) =====
 async function renderIndex() {
-  const data = await loadMenu();
   const wrap = document.getElementById("categoryButtons");
   if (!wrap) return;
 
-  wrap.innerHTML = (data.categories || [])
-    .map((c) => {
-      const title = safeText(c.titleTR || c.title);
-      const slug = encodeURIComponent(c.slug);
-      return `<a class="menuBtn" href="./category.html?c=${slug}">${title}</a>`;
-    })
+  const categories = await loadMenu();
+
+  // ⚠️ /tr/ altındasın, o yüzden RELATIVE link kullanıyoruz: "category?cat=..."
+  wrap.innerHTML = categories
+    .map(
+      (c) => `
+      <a class="btn" href="category?cat=${encodeURIComponent(c.slug)}">
+        ${safe(c.titleTR)}
+      </a>
+    `
+    )
     .join("");
 }
 
-// ===== CATEGORY =====
+// ===== CATEGORY (ÜRÜNLER) =====
 async function renderCategory() {
-  const data = await loadMenu();
-  const slug = getQueryParam("c");
+  const slug = qs("cat");
+  const titleEl = document.getElementById("catTitle");
+  const itemsWrap = document.getElementById("items");
 
-  const cat = (data.categories || []).find(
-    (c) => c.slug === slug
-  );
-
-  if (!cat) {
-    document.getElementById("catTitle").textContent = "Kategori bulunamadı";
+  if (!slug) {
+    if (titleEl) titleEl.textContent = "Kategori bulunamadı";
+    if (itemsWrap) itemsWrap.innerHTML = "";
     return;
   }
 
-  document.getElementById("catTitle").textContent = cat.titleTR;
+  const categories = await loadMenu();
+  const cat = categories.find((c) => c.slug === slug);
 
-  const itemsEl = document.getElementById("items");
-  itemsEl.innerHTML = (cat.items || [])
+  if (!cat) {
+    if (titleEl) titleEl.textContent = "Kategori bulunamadı";
+    if (itemsWrap) itemsWrap.innerHTML = "";
+    return;
+  }
+
+  if (titleEl) titleEl.textContent = safe(cat.titleTR);
+
+  if (!itemsWrap) return;
+
+  if (!cat.items || cat.items.length === 0) {
+    itemsWrap.innerHTML = "<p style='text-align:center'>Ürün bulunamadı</p>";
+    return;
+  }
+
+  itemsWrap.innerHTML = cat.items
     .map(
       (p) => `
       <div class="item">
         <div class="itemMain">
-          <div class="itemName">${safeText(p.name)}</div>
-          ${p.desc ? `<div class="itemDesc">${safeText(p.desc)}</div>` : ""}
+          <div class="itemName">${safe(p.name)}</div>
+          ${p.desc ? `<div class="itemDesc">${safe(p.desc)}</div>` : ""}
         </div>
         <div class="itemRight">
-          <div class="price">${safeText(p.price)}</div>
+          <div class="price">${safe(p.price)}</div>
           ${
             p.image
-              ? `<img class="thumb" src="${p.image}" />`
-              : ""
+              ? `<img class="thumb" src="${p.image}" alt="">`
+              : `<div class="thumb"></div>`
           }
         </div>
       </div>
@@ -72,12 +88,20 @@ async function renderCategory() {
 // ===== ROUTER =====
 document.addEventListener("DOMContentLoaded", async () => {
   try {
-    if (isCategoryPage) {
+    // ✅ /tr/category veya /category (html olsa da olur)
+    const p = location.pathname.toLowerCase();
+    const isCategory =
+      p.endsWith("/category") ||
+      p.includes("/category/") ||
+      p.endsWith("category.html") ||
+      p.includes("category");
+
+    if (isCategory) {
       await renderCategory();
     } else {
       await renderIndex();
     }
-  } catch (err) {
-    console.error("MENÜ HATASI:", err);
+  } catch (e) {
+    console.error("MENÜ HATASI:", e);
   }
 });
