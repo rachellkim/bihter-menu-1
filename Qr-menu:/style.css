@@ -21,7 +21,7 @@ body {
   width: min(430px, 100%);
   background: rgba(255,255,255,0.80);
   border-radius: 26px;
-  padding: 22px 18px 18px;
+  padding: 26px 18px 18px;
   box-shadow: 0 12px 30px rgba(0,0,0,0.12);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
@@ -32,21 +32,24 @@ body {
   width: min(520px, 100%);
 }
 
-/* ---------- BRAND / LOGO (ana sayfa logosu) ---------- */
 .brand{ text-align: center; }
+
+/* ✅ LOGO KÜÇÜLT */
 .logo{
-  width: 170px;          /* küçülttük */
-  max-width: 70%;
+  width: 150px;     /* eskisi 220 idi */
+  max-width: 65%;
   height: auto;
   display: block;
   margin: 0 auto 12px;
 }
+
 .tagline{
   margin: 0;
-  font-size: 24px;
+  font-size: 26px;
   font-weight: 600;
   letter-spacing: 0.5px;
 }
+
 .divider{
   width: 72%;
   height: 2px;
@@ -58,14 +61,14 @@ body {
   margin: 12px auto 10px;
 }
 
-/* ---------- KATEGORİ ÜSTÜ KAPAK GÖRSELİ (hero) ---------- */
+/* ✅ SUB SAYFASI: KATEGORİ ÜSTÜ RESİM (hero) AŞIRI BÜYÜKTÜ */
 .hero{
   width: 100%;
-  height: 190px;         /* 🔥 dev gibi olmasın */
+  height: 190px;          /* mobilde ideal */
   object-fit: cover;
   border-radius: 18px;
   display: block;
-  margin: 0 auto 14px;
+  margin: 0 auto 12px;
 }
 
 /* butonlar */
@@ -81,9 +84,9 @@ body {
   color: #fff;
   background: rgba(150, 55, 55, 0.70);
   padding: 16px 14px;
-  border-radius: 12px;
+  border-radius: 10px;
   font-size: 20px;
-  letter-spacing: 0.6px;
+  letter-spacing: 0.8px;
 }
 .btn:active{ transform: scale(0.99); }
 
@@ -110,11 +113,10 @@ body {
   padding: 6px 0 18px;
 }
 
-/* Ürün kartı: isim (sol) + fiyat/foto (sağ) */
 .item{
   display: grid;
   grid-template-columns: 1fr auto;
-  gap: 14px;
+  gap: 12px;
   padding: 14px 14px;
   background: rgba(255,255,255,0.75);
   border-radius: 14px;
@@ -126,7 +128,7 @@ body {
 .itemName{
   margin: 0;
   font-size: 18px;
-  font-weight: 750;
+  font-weight: 700;
 }
 .itemDesc{
   margin: 6px 0 0;
@@ -135,27 +137,31 @@ body {
   line-height: 1.25rem;
 }
 
+/* ✅ İSİM - FİYAT - FOTOĞRAF AYNI SATIR: .itemRight'ı flex yaptık */
 .itemRight{
-  display: grid;
-  justify-items: end;
-  align-content: start;
-  gap: 10px;
-  min-width: 120px;     /* foto büyüyünce yer aç */
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  min-width: 0;
 }
+
+/* fiyat */
 .price{
-  font-weight: 850;
+  font-weight: 800;
   font-size: 16px;
   white-space: nowrap;
 }
 
-/* FOTOĞRAF (büyüttük) */
+/* ✅ FOTOĞRAF BÜYÜT */
 .thumb{
-  width: 86px;          /* 🔥 büyüdü */
-  height: 86px;
-  border-radius: 14px;
+  width: 82px;     /* eskisi 54 idi */
+  height: 82px;
+  border-radius: 12px;
   object-fit: cover;
   background: rgba(0,0,0,0.08);
   display: block;
+  flex: 0 0 auto;
 }
 
 /* footer ikonlar */
@@ -186,10 +192,10 @@ body {
   cursor: pointer;
 }
 
-/* Mobilde daha da derli toplu */
-@media (max-width: 420px){
-  .hero{ height: 160px; }
-  .thumb{ width: 78px; height: 78px; }
-  .itemRight{ min-width: 110px; }
-  .tagline{ font-size: 22px; }
+/* küçük ekran ince ayar */
+@media (max-width: 380px){
+  .thumb{ width: 74px; height: 74px; }
+  .price{ font-size: 15px; }
+  .logo{ width: 140px; }
+  .hero{ height: 170px; }
 }
