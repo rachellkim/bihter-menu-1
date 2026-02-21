@@ -1,201 +1,218 @@
-/* reset */
-* { box-sizing: border-box; }
-html, body { height: 100%; }
-body {
-  margin: 0;
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-  overflow-x: hidden;
+// ===== CONFIG =====
+const API_URL = "/api/menu";
+
+// Ana sayfada görünecek 6 ANA kategori slug'ı (Airtable slug(text))
+const MAIN_SLUGS = [
+  "soguk-kahveler",
+  "sicak-icecekler",
+  "sicak-kahveler",
+  "soguk-icecekler",
+  "tatlilar",
+  "kahvaltiliklar",
+];
+
+// ANA -> ALT kategori eşleşmesi (Airtable slug'larıyla birebir)
+const SUB_MAP = {
+  "sicak-kahveler": ["espresso-bazli", "aromali-ozel-kahveler", "filtretturk"],
+  "soguk-kahveler": ["sogukbazli", "soguk-matchalar", "frappeler"],
+
+  // Alt kategori yoksa boş bırak (direkt ürün sayfasına gidecek)
+  "sicak-icecekler": [],
+  "soguk-icecekler": [],
+  "tatlilar": [],
+  "kahvaltiliklar": [],
+};
+
+// ===== HELPERS =====
+const qs = (k) => new URLSearchParams(location.search).get(k);
+
+function normTR(s = "") {
+  return String(s)
+    .toLowerCase()
+    .trim()
+    .replace(/ı/g, "i")
+    .replace(/ğ/g, "g")
+    .replace(/ü/g, "u")
+    .replace(/ş/g, "s")
+    .replace(/ö/g, "o")
+    .replace(/ç/g, "c");
 }
 
-/* arka plan */
-.screen{
-  min-height: 100vh;
-  padding: 28px 16px;
-  display: grid;
-  place-items: center;
-  background: #f3efe9;
+function priceText(p) {
+  if (p === null || p === undefined) return "";
+  const str = String(p).trim();
+  // "180" -> "180₺", "180₺" aynen kalsın
+  if (!str) return "";
+  return str.includes("₺") ? str : `${str}₺`;
 }
 
-/* kart */
-.card{
-  width: min(430px, 100%);
-  background: rgba(255,255,255,0.80);
-  border-radius: 26px;
-  padding: 26px 18px 18px;
-  box-shadow: 0 12px 30px rgba(0,0,0,0.12);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  overflow: hidden;
+async function getMenu() {
+  const res = await fetch(API_URL, { cache: "no-store" });
+  if (!res.ok) throw new Error("API hata: " + res.status);
+  return res.json();
 }
 
-.card.wide{
-  width: min(520px, 100%);
+// Menü datasında kategori slug'ını yakalamak için esnek bulucu
+function catSlug(cat) {
+  return (
+    cat?.slug ||
+    cat?.slugTR ||
+    cat?.slugText ||
+    cat?.["slug(text)"] ||
+    cat?.["slug"] ||
+    ""
+  );
 }
 
-.brand{ text-align: center; }
-
-/* ✅ LOGO KÜÇÜLT */
-.logo{
-  width: 150px;     /* eskisi 220 idi */
-  max-width: 65%;
-  height: auto;
-  display: block;
-  margin: 0 auto 12px;
+function catTitleTR(cat) {
+  return cat?.titleTR || cat?.title || cat?.nameTR || cat?.name || "";
 }
 
-.tagline{
-  margin: 0;
-  font-size: 26px;
-  font-weight: 600;
-  letter-spacing: 0.5px;
+function catHeroUrl(cat) {
+  // Airtable'dan kapak foto alanına göre uyarlayabilirsin
+  return (
+    cat?.coverPhoto ||
+    cat?.kapakFoto ||
+    cat?.imageUrl ||
+    cat?.photoUrl ||
+    cat?.["Kapak Foto"] ||
+    ""
+  );
 }
 
-.divider{
-  width: 72%;
-  height: 2px;
-  background: rgba(0,0,0,0.18);
-  margin: 14px auto 22px;
-}
-.divider.small{
-  width: 60%;
-  margin: 12px auto 10px;
+function findCategory(data, slug) {
+  const target = normTR(slug);
+  return (data.categories || []).find((c) => normTR(catSlug(c)) === target);
 }
 
-/* ✅ SUB SAYFASI: KATEGORİ ÜSTÜ RESİM (hero) AŞIRI BÜYÜKTÜ */
-.hero{
-  width: 100%;
-  height: 190px;          /* mobilde ideal */
-  object-fit: cover;
-  border-radius: 18px;
-  display: block;
-  margin: 0 auto 12px;
+// Ürün alanları esnek
+function itemName(it) {
+  return it?.["Ürün Adı"] || it?.["Urun Adi"] || it?.name || it?.title || "";
+}
+function itemDescTR(it) {
+  return it?.["Açıklama TR"] || it?.["Aciklama TR"] || it?.descTR || it?.desc || "";
+}
+function itemPrice(it) {
+  return it?.["Fiyat"] || it?.price || it?.priceText || it?.["Price"] || "";
+}
+function itemPhoto(it) {
+  return it?.photoUrl || it?.imageUrl || it?.img || it?.["Foto"] || "";
 }
 
-/* butonlar */
-.menu-buttons{
-  display: grid;
-  gap: 14px;
-  padding: 6px 0 18px;
-}
-.btn{
-  display: block;
-  text-decoration: none;
-  text-align: center;
-  color: #fff;
-  background: rgba(150, 55, 55, 0.70);
-  padding: 16px 14px;
-  border-radius: 10px;
-  font-size: 20px;
-  letter-spacing: 0.8px;
-}
-.btn:active{ transform: scale(0.99); }
+// ===== RENDERERS =====
+function renderIndex(categories) {
+  const wrap = document.getElementById("buttons");
+  if (!wrap) return;
 
-/* kategori header */
-.catHeader{ text-align: center; position: relative; padding-top: 6px; }
-.backLink{
-  position: absolute;
-  left: 0;
-  top: 6px;
-  text-decoration: none;
-  color: rgba(0,0,0,0.65);
-  font-weight: 600;
-}
-.catTitle{
-  margin: 10px 0 0;
-  font-size: 22px;
-  letter-spacing: 2px;
+  // sadece 6 ana slug ve sırayla
+  const bySlug = new Map(categories.map((c) => [normTR(catSlug(c)), c]));
+
+  wrap.innerHTML = MAIN_SLUGS.map((slug) => {
+    const c = bySlug.get(normTR(slug));
+    if (!c) return ""; // yoksa hiç basma
+    const title = catTitleTR(c) || slug;
+    return `<a class="btn" href="/sub.html?cat=${encodeURIComponent(slug)}">${title}</a>`;
+  }).join("");
 }
 
-/* ürün listesi */
-.items{
-  display: grid;
-  gap: 14px;
-  padding: 6px 0 18px;
+function renderSub(data, mainSlug) {
+  const cat = findCategory(data, mainSlug);
+
+  // başlık/hero
+  const titleEl = document.getElementById("catTitle2");
+  const heroEl = document.getElementById("catHero");
+
+  if (titleEl) titleEl.textContent = cat ? catTitleTR(cat) : mainSlug;
+  if (heroEl) {
+    const h = cat ? catHeroUrl(cat) : "";
+    if (h) {
+      heroEl.src = h;
+      heroEl.style.display = "block";
+    } else {
+      heroEl.style.display = "none";
+    }
+  }
+
+  const subs = SUB_MAP[mainSlug] || [];
+
+  // alt kategori yoksa direkt ürün sayfasına
+  if (!subs.length) {
+    location.replace(`/category/?cat=${encodeURIComponent(mainSlug)}`);
+    return;
+  }
+
+  const wrap = document.getElementById("subButtons");
+  if (!wrap) return;
+
+  wrap.innerHTML = subs
+    .map((subSlug) => {
+      const subCat = findCategory(data, subSlug);
+      const label = subCat ? catTitleTR(subCat) : subSlug;
+      return `<a class="btn" href="/category/?cat=${encodeURIComponent(subSlug)}">${label}</a>`;
+    })
+    .join("");
 }
 
-.item{
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 12px;
-  padding: 14px 14px;
-  background: rgba(255,255,255,0.75);
-  border-radius: 14px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
-  border: 1px solid rgba(0,0,0,0.06);
+function renderCategory(data, slug) {
+  const cat = findCategory(data, slug);
+
+  const titleEl = document.getElementById("catTitle");
+  if (titleEl) titleEl.textContent = cat ? catTitleTR(cat) : slug;
+
+  const list = document.getElementById("items");
+  if (!list) return;
+
+  const items = (cat?.items || []).map((it) => {
+    const name = itemName(it);
+    const desc = itemDescTR(it);
+    const price = priceText(itemPrice(it));
+    const photo = itemPhoto(it);
+
+    return `
+      <div class="item">
+        <div class="itemMain">
+          <h3 class="itemName">${name || ""}</h3>
+          ${desc ? `<div class="itemDesc">${desc}</div>` : ""}
+        </div>
+
+        <div class="itemRight">
+          <div class="price">${price}</div>
+          ${photo ? `<img class="thumb" src="${photo}" alt="${name || ""}" loading="lazy">` : ""}
+        </div>
+      </div>
+    `;
+  });
+
+  list.innerHTML = items.join("") || `<div style="padding:12px;color:rgba(0,0,0,.6)">Bu kategoride ürün yok.</div>`;
 }
 
-.itemMain{ min-width: 0; }
-.itemName{
-  margin: 0;
-  font-size: 18px;
-  font-weight: 700;
-}
-.itemDesc{
-  margin: 6px 0 0;
-  font-size: 13px;
-  color: rgba(0,0,0,0.55);
-  line-height: 1.25rem;
-}
+// ===== BOOT =====
+document.addEventListener("DOMContentLoaded", async () => {
+  try {
+    const data = await getMenu();
 
-/* ✅ İSİM - FİYAT - FOTOĞRAF AYNI SATIR: .itemRight'ı flex yaptık */
-.itemRight{
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 12px;
-  min-width: 0;
-}
+    // hangi sayfadayız?
+    const hasIndex = !!document.getElementById("buttons");
+    const hasSub = !!document.getElementById("subButtons");
+    const hasCat = !!document.getElementById("items");
 
-/* fiyat */
-.price{
-  font-weight: 800;
-  font-size: 16px;
-  white-space: nowrap;
-}
+    if (hasIndex) {
+      renderIndex(data.categories || []);
+      return;
+    }
 
-/* ✅ FOTOĞRAF BÜYÜT */
-.thumb{
-  width: 82px;     /* eskisi 54 idi */
-  height: 82px;
-  border-radius: 12px;
-  object-fit: cover;
-  background: rgba(0,0,0,0.08);
-  display: block;
-  flex: 0 0 auto;
-}
+    if (hasSub) {
+      const mainSlug = qs("cat") || "";
+      renderSub(data, mainSlug);
+      return;
+    }
 
-/* footer ikonlar */
-.footer{
-  display: flex;
-  justify-content: space-between;
-  padding-top: 8px;
-  border-top: 1px solid rgba(0,0,0,0.08);
-}
-.icon-btn{
-  text-decoration: none;
-  font-size: 26px;
-  padding: 12px 16px;
-}
-
-/* yukarı çık */
-.toTop{
-  position: fixed;
-  right: 18px;
-  bottom: 18px;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  border: 0;
-  background: rgba(255,255,255,0.92);
-  box-shadow: 0 10px 24px rgba(0,0,0,0.18);
-  font-size: 22px;
-  cursor: pointer;
-}
-
-/* küçük ekran ince ayar */
-@media (max-width: 380px){
-  .thumb{ width: 74px; height: 74px; }
-  .price{ font-size: 15px; }
-  .logo{ width: 140px; }
-  .hero{ height: 170px; }
-}
+    if (hasCat) {
+      const slug = qs("cat") || "";
+      renderCategory(data, slug);
+      return;
+    }
+  } catch (e) {
+    console.error(e);
+  }
+});
