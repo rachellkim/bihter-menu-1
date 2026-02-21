@@ -5,18 +5,16 @@ const API_URL = "/api/menu";
 const qs = (k) => new URLSearchParams(location.search).get(k);
 const safe = (x) => (x ?? "").toString().trim();
 
-function normSlug(s) {
-  return safe(s)
-    .toLowerCase()
-    .replaceAll("ı", "i")
-    .replaceAll("ğ", "g")
-    .replaceAll("ü", "u")
-    .replaceAll("ş", "s")
-    .replaceAll("ö", "o")
-    .replaceAll("ç", "c")
-    .replace(/[^a-z0-9-]/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "");
+function isCategoryPath(pathname) {
+  // /category  veya /category/  veya /category.html gibi tüm varyasyonlar
+  const p = (pathname || "").toLowerCase();
+  return (
+    p === "/category" ||
+    p === "/category/" ||
+    p.endsWith("/category") ||
+    p.endsWith("/category/") ||
+    p.endsWith("category.html")
+  );
 }
 
 // ===== LOAD MENU =====
@@ -35,7 +33,6 @@ async function renderIndex() {
 
   const categories = await loadMenu();
 
-  // ✅ linkleri /category şeklinde veriyoruz
   wrap.innerHTML = categories
     .map(
       (c) => `
@@ -49,16 +46,11 @@ async function renderIndex() {
 
 // ===== CATEGORY (ÜRÜNLER) =====
 async function renderCategory() {
-  const slugRaw = qs("cat");
-  const slug = normSlug(slugRaw);
-
+  const slug = qs("cat");
   const titleEl = document.getElementById("catTitle");
   const itemsWrap = document.getElementById("items");
 
-  if (!titleEl || !itemsWrap) {
-    console.warn("catTitle veya items elementi yok. category.html içindeki id'leri kontrol et.");
-    return;
-  }
+  if (!titleEl || !itemsWrap) return;
 
   if (!slug) {
     titleEl.textContent = "Kategori seçilmedi";
@@ -67,12 +59,11 @@ async function renderCategory() {
   }
 
   const categories = await loadMenu();
-  const cat = categories.find((c) => normSlug(c.slug) === slug);
+  const cat = categories.find((c) => c.slug === slug);
 
   if (!cat) {
     titleEl.textContent = "Kategori bulunamadı";
     itemsWrap.innerHTML = "";
-    console.warn("Slug bulunamadı:", slugRaw, "=>", slug, "Mevcut sluglar:", categories.map(x => x.slug));
     return;
   }
 
@@ -93,7 +84,11 @@ async function renderCategory() {
         </div>
         <div class="itemRight">
           <div class="price">${safe(p.price)}</div>
-          ${p.image ? `<img class="thumb" src="${p.image}" alt="">` : `<div class="thumb"></div>`}
+          ${
+            p.image
+              ? `<img class="thumb" src="${p.image}" alt="">`
+              : `<div class="thumb"></div>`
+          }
         </div>
       </div>
     `
@@ -104,16 +99,11 @@ async function renderCategory() {
 // ===== ROUTER =====
 document.addEventListener("DOMContentLoaded", async () => {
   try {
-    const path = location.pathname.replace(/\/+$/, ""); // sondaki / temizle
-
-    // ✅ /category ve /category.html ikisi de kategori sayfası
-    const isCategory =
-      path.endsWith("/category") ||
-      path.endsWith("/category.html") ||
-      path.includes("/category");
-
-    if (isCategory) await renderCategory();
-    else await renderIndex();
+    if (isCategoryPath(location.pathname)) {
+      await renderCategory();
+    } else {
+      await renderIndex();
+    }
   } catch (e) {
     console.error("MENÜ HATASI:", e);
   }
