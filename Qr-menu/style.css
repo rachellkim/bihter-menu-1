@@ -35,6 +35,21 @@ a {
 }
 
 /* flu arka plan */
+.card {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  margin: 24px auto;
+  padding: 24px 20px;
+
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 28px;
+
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+
+  overflow: hidden;
+}
+
 .card::before {
   content: "";
   position: absolute;
@@ -48,6 +63,7 @@ a {
   opacity: 0.25;
 
   z-index: 0;
+}
 }
 
 /* kart içindeki her şey üstte kalsın */
