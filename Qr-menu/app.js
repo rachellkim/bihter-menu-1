@@ -3,12 +3,12 @@ const API_URL = "/api/menu";
 
 // Ana sayfada görünecek 6 ANA kategori slug'ı (Airtable slug(text))
 const MAIN_SLUGS = [
+  "tatlilar",
   "soguk-kahveler",
   "sicak-icecekler",
   "sicak-kahveler",
   "soguk-icecekler",
-  "tatlilar",
-  "kahvaltiliklar",
+  "atistirmaliklar",
 ];
 
 /**
@@ -21,7 +21,7 @@ const SUB_MAP = {
   "sicak-icecekler": [],
   "soguk-icecekler": [],
   "tatlilar": [],
-  "kahvaltiliklar": [],
+  "atistirmaliklar": [],
 };
 
 // ===== HELPERS =====
