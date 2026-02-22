@@ -16,13 +16,12 @@ const MAIN_SLUGS = [
  * Örn: "sicak-kahveler" tıklanınca 3 alt kategori butonu gösterecek.
  */
 const SUB_MAP = {
-  "atistirmaliklar": [],
+ " atistirmaliklar": [],
   "sicak-kahveler": ["espresso-bazli", "aromali-ozel-kahveler", "filtreturk"],
   "soguk-kahveler": ["sogukbazli", "soguk-matchalar", "frappeler"],
   "sicak-icecekler": [],
   "soguk-icecekler": [],
   "tatlilar": [],
-  
 };
 
 // ===== HELPERS =====
@@ -140,7 +139,6 @@ function renderIndex(data) {
     const title = getTitle(cat);
     const hasSubs = Array.isArray(SUB_MAP[slug]) && SUB_MAP[slug].length > 0;
 
-    // ÖNEMLİ: root directory Qr-menu ise dosyalar kökten servis edilir:
     // /sub.html, /category/ (category/index.html)
     const href = hasSubs
       ? `/sub.html?main=${encodeURIComponent(slug)}`
@@ -205,14 +203,15 @@ function renderCategory(data) {
   setHero(cat);
   if (titleEl) titleEl.textContent = normTR(getTitle(cat));
 
-  const items = cat?.items || [];
-  items = [...items].sort((a, b) => {
-  const ax = Number(a?.["Sıra"] ?? a?.Sira ?? a?.order ?? a?.Order ?? 999999);
-  const bx = Number(b?.["Sıra"] ?? b?.Sira ?? b?.order ?? b?.Order ?? 999999);
-  return ax - bx;
-});
+  // ✅ items: "Sıra" alanına göre sırala (yoksa sona at)
+  const items = [...(cat?.items || [])].sort((a, b) => {
+    const ax = Number(a?.["Sıra"] ?? a?.Sira ?? a?.order ?? a?.Order ?? 999999);
+    const bx = Number(b?.["Sıra"] ?? b?.Sira ?? b?.order ?? b?.Order ?? 999999);
+    return ax - bx;
+  });
 
-  
+  itemsBox.innerHTML = "";
+
   for (const it of items) {
     const name = it?.["Ürün Adı"] || it?.["Urun Adi"] || it?.name || "";
     const desc =
@@ -221,7 +220,9 @@ function renderCategory(data) {
       it?.descTR ||
       it?.desc ||
       "";
-    const price = formatPrice(it?.price || it?.["Fiyat"] || it?.["Price"] || it?.priceText || "");
+    const price = formatPrice(
+      it?.price || it?.["Fiyat"] || it?.["Price"] || it?.priceText || ""
+    );
     const imgUrl = getProductImage(it);
 
     const card = document.createElement("article");
