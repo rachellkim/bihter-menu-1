@@ -16,12 +16,13 @@ const MAIN_SLUGS = [
  * Örn: "sicak-kahveler" tıklanınca 3 alt kategori butonu gösterecek.
  */
 const SUB_MAP = {
+  "atistirmaliklar": [],
   "sicak-kahveler": ["espresso-bazli", "aromali-ozel-kahveler", "filtreturk"],
   "soguk-kahveler": ["sogukbazli", "soguk-matchalar", "frappeler"],
   "sicak-icecekler": [],
   "soguk-icecekler": [],
   "tatlilar": [],
-  "atistirmaliklar": [],
+  
 };
 
 // ===== HELPERS =====
