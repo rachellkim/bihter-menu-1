@@ -131,10 +131,10 @@ a {
   background-image: url("https://static.wixstatic.com/media/b9ef37_ca9f847d9f1644eaac2d1ac54e30d2b1~mv2.jpeg");
   background-size: cover;
   background-position: center;
-  -webkit-filter: blur(14px);
-  filter: blur(14px);
-  opacity: .25;
-  transform: scale(1.08); /* blur kenarlarını gizler */
+   -webkit-filter: blur(8px);
+  filter: blur(8px);
+  opacity: .32;
+  transform: scale(1.03);
   z-index: 0;
   pointer-events: none;
 }
