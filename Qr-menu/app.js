@@ -203,13 +203,15 @@ function renderCategory(data) {
   setHero(cat);
   if (titleEl) titleEl.textContent = normTR(getTitle(cat));
 
-  // ✅ items: "Sıra" alanına göre sırala (yoksa sona at)
-  const items = [...(cat?.items || [])].sort((a, b) => {
-    const ax = Number(a?.["Sıra"] ?? a?.Sira ?? a?.order ?? a?.Order ?? 999999);
-    const bx = Number(b?.["Sıra"] ?? b?.Sira ?? b?.order ?? b?.Order ?? 999999);
-    return ax - bx;
-  });
-
+const items = [...(cat?.items || [])].sort((a, b) => {
+  const ax = Number(
+    a?.["Sira"] ?? a?.["Sıra"] ?? a?.Sira ?? a?.order ?? a?.Order ?? 999999
+  );
+  const bx = Number(
+    b?.["Sira"] ?? b?.["Sıra"] ?? b?.Sira ?? b?.order ?? b?.Order ?? 999999
+  );
+  return ax - bx;
+});
   itemsBox.innerHTML = "";
 
   for (const it of items) {
