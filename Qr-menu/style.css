@@ -50,26 +50,34 @@ a {
   overflow: hidden;
 }
 
-.card::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-
-  background-image: url("https://static.wixstatic.com/media/b9ef37_ca9f847d9f1644eaac2d1ac54e30d2b1~mv2.jpeg");
-  background-size: cover;
-  background-position: center;
-
-  filter: blur(10px);
-  opacity: 0.25;
-
-  z-index: 0;
-}
-}
-
-/* kart içindeki her şey üstte kalsın */
-.card > * {
+.card {
   position: relative;
-  z-index: 1;
+  overflow: hidden;
+}
+
+.card::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background-image:url("https://static.wixstatic.com/media/b9ef37_ca9f847d9f1644eaac2d1ac54e30d2b1~mv2.jpeg");
+  background-size:cover;
+  background-position:center;
+
+  /* iOS Safari uyumluluğu */
+  -webkit-filter: blur(10px);
+  filter: blur(10px);
+
+  opacity: .25;
+  transform: translateZ(0);     /* iOS render bug fix */
+  will-change: transform, filter;
+
+  z-index:0;
+  pointer-events:none;
+}
+
+.card > *{
+  position:relative;
+  z-index:1;
 }
 /* ========== LOGO & BAŞLIK ========== */
 .brand {
