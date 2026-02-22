@@ -216,3 +216,8 @@ a {
   flex-shrink: 0;
   display: block;
 }
+
+
+body.page-home {
+  background: url("/img/bg-home.jpg") center / cover no-repeat;
+}
