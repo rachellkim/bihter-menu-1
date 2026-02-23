@@ -319,14 +319,14 @@ body.page-cat::before{
 /* HERO: bardak görünsün diye kadrajı aşağı al */
 /* ===== SUB HERO — BARDAK ÜSTÜ GÖRÜNSÜN ===== */
 /* ===== SUB HERO — BARDAK ÜSTÜ GÖRÜNSÜN (İNCE AYAR) ===== */
+/* ===== SUB HERO — BARDAK ÜSTÜ GÖRÜNSÜN ===== */
 body.page-sub .hero{
   width: 100%;
   height: 220px;
   border-radius: 20px;
-  object-fit: cover;
 
-  /* 🔥 kadrajı aşağı kaydır: 60–80 arası oynatabilirsin */
-  object-position: center 78%;
+  object-fit: cover;
+  object-position: center 75%; /* 🔥 kritik satır */
 
   display: block;
   margin-bottom: 18px;
@@ -335,6 +335,15 @@ body.page-sub .hero{
 @media (max-width: 600px){
   body.page-sub .hero{
     height: 180px;
-    object-position: center 72%;
+    object-position: center 78%;
   }
+}
+
+body.page-sub .menu-buttons{
+  justify-items: center;
+}
+
+body.page-sub .menu-buttons a{
+  width: 100%;
+  max-width: 360px;
 }
