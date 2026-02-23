@@ -1,14 +1,9 @@
-/* =========================================================
-   BIHTER MENU — TEMİZ / DÜZENLİ style.css
-   - Bozuk @media / fazla } yok
-   - Header çakışmasını kökten çözer (Menü üst satır, başlık alt satır)
-   ========================================================= */
 
 /* ========== RESET ========== */
 * { box-sizing: border-box; }
 html, body { height: 100%; margin: 0; padding: 0; }
 
-/* ========== FONT ========== */
+/* ========== THEME / FONT ========== */
 :root{
   --font: "Avenir Next", Avenir, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
   --overlay: rgba(255,255,255,0.55);
@@ -31,8 +26,8 @@ body{
 
 a{ text-decoration: none; color: inherit; }
 
-/* ========== SAYFA ARKAPLAN (3 SAYFA) ========== */
-
+/* ========== BACKGROUND (3 PAGES) ========== */
+body.page-home::before,
 body.page-cat::before,
 body.page-sub::before{
   content:"";
@@ -47,26 +42,7 @@ body.page-sub::before{
   z-index: -2;
 }
 
-/* === ANA SAYFA LOGO (BÜYÜK) === */
-.page-home .logo{
-  width: 300px !important;     /* 🔥 büyüttük */
-  max-width: 90vw;             /* mobilde taşmasın */
-  height: auto;
-  margin: 10px auto 22px;      /* biraz nefes */
-  display: block;
-
-  filter: drop-shadow(0 10px 22px rgba(0,0,0,0.35));
-}
-@media (max-width: 600px){
-  .page-home .logo{
-    width: 320px !important;
-  }
-
-  .page-home .brand{
-    width: 100%;
-  }
-}
-
+/* overlay */
 body::after{
   content:"";
   position: fixed;
@@ -76,22 +52,22 @@ body::after{
   pointer-events: none;
 }
 
-/* Senin verdiğin görseller */
+/* Home background */
 body.page-home::before{
   background-image: url("https://static.wixstatic.com/media/b9ef37_d2f5aa4eb3c54500a2af1030b1a315b6~mv2.jpg");
 }
-   
 
+/* Sub background set by JS */
 body.page-sub::before{
   background-image: var(--sub-bg, none);
 }
 
-/* Kategori arkaplanı (istersen gerçek URL koy) */
+/* Category background (default = same as home; istersen ayrı görsel koyarsın) */
 body.page-cat::before{
-  background-image: url("CATEGORY_GORSEL_URL");
+  background-image: url("https://static.wixstatic.com/media/b9ef37_d2f5aa4eb3c54500a2af1030b1a315b6~mv2.jpg");
 }
 
-/* ========== SAYFA ZEMİNİ ========== */
+/* ========== LAYOUT ========== */
 .screen{
   min-height: 100vh;
   display: grid;
@@ -99,24 +75,21 @@ body.page-cat::before{
   padding: 28px 16px;
 }
 
-/* ========== ANA KART ========== */
 .card{
   width: 100%;
   max-width: 420px;
   padding: 22px 18px;
   border-radius: 28px;
-
   background: var(--card-bg);
   border: 1px solid var(--border);
   box-shadow: 0 14px 40px var(--shadow);
-
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
 }
 
 .card.wide{ max-width: 520px; }
 
-/* ========== LOGO & BAŞLIK ========== */
+/* ========== BRAND / LOGO ========== */
 .brand{ text-align: center; }
 
 .logo{
@@ -126,7 +99,20 @@ body.page-cat::before{
   display: block;
 }
 
-/* Ana sayfa logo (Aşk-ı Bihter) */
+/* Ana sayfa logo büyük */
+.page-home .logo{
+  width: 300px !important;
+  max-width: 90vw;
+  height: auto;
+  margin: 10px auto 18px;
+  display: block;
+  filter: drop-shadow(0 10px 22px rgba(0,0,0,0.25));
+}
+
+@media (max-width: 600px){
+  .page-home .logo{ width: 320px !important; }
+  .page-home .brand{ width: 100%; }
+}
 
 .tagline{
   font-size: 18px;
@@ -134,36 +120,32 @@ body.page-cat::before{
   font-weight: 400;
 }
 
+/* ========== DIVIDER ========== */
 .divider{
   width: 60%;
   height: 2px;
   background: rgba(0,0,0,0.15);
   margin: 14px auto 22px;
 }
-
 .divider.small{
   width: 100%;
   margin: 12px auto 0;
 }
 
-/* =========================================================
-   KATEGORİ / SUB HEADER — ÇAKIŞMAYI KÖKTEN ÇÖZER
-   Menü üst satır, başlık alt satır (her ekran)
-   ========================================================= */
+/* ========== CATEGORY / SUB HEADER (NO OVERLAP) ========== */
 .page-cat .catHeader,
 .page-sub .catHeader{
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 6px;
-
   padding: calc(10px + env(safe-area-inset-top)) 16px 6px;
 }
 
 .page-cat .backLink,
 .page-sub .backLink{
   align-self: flex-start;
-  display: block;        /* asla başlıkla aynı satıra gelmesin */
+  display: block;
   position: static;
   white-space: nowrap;
   font-size: 13px;
@@ -177,32 +159,27 @@ body.page-cat::before{
 .page-cat #catTitle,
 .page-sub .catTitle,
 .page-sub #catTitle{
-  display: block;        /* asla backLink ile birleşmesin */
+  display: block;
   margin: 0;
   padding: 0;
-
   text-align: center;
-  font-size: 18px;       /* genel boyut */
+  font-size: 18px;
   letter-spacing: 1px;
   line-height: 1.2;
-
-  /* uzunsa 2 satıra düşsün, çakışmasın */
   white-space: normal;
   overflow-wrap: anywhere;
 }
 
-/* Mobilde biraz daha küçült */
 @media (max-width: 600px){
   .page-cat .catTitle,
   .page-cat #catTitle,
   .page-sub .catTitle,
   .page-sub #catTitle{
     font-size: 16px;
-    letter-spacing: 1px;
   }
 }
 
-/* ========== ANA BUTONLAR (HOME / SUB) ========== */
+/* ========== HOME / SUB BUTTONS ========== */
 .menu-wrap{ margin-top: 14px; }
 
 .menu-buttons{
@@ -210,6 +187,9 @@ body.page-cat::before{
   gap: 14px;
 }
 
+/* JS .btn verse de vermese de BUTON görünümü */
+.menu-buttons a,
+#categoryButtons a,
 .btn{
   display: block;
   background: rgba(150, 55, 55, 0.75);
@@ -221,20 +201,21 @@ body.page-cat::before{
   letter-spacing: 0.5px;
 }
 
+.menu-buttons a:active,
+#categoryButtons a:active,
 .btn:active{ transform: scale(0.98); }
 
-/* ========== ÜRÜN LİSTESİ ========== */
+/* ========== ITEMS ========== */
 .items{ display: grid; gap: 14px; }
 
 .item{
   display: grid;
-  grid-template-columns: 1fr auto 64px; /* isim | fiyat | foto */
+  grid-template-columns: 1fr auto 64px;
   align-items: center;
   gap: 12px;
   font-size: 15px;
   padding: 14px;
   border-radius: 16px;
-
   background: var(--card-bg);
   border: 1px solid var(--border);
   box-shadow: 0 6px 18px rgba(0,0,0,0.06);
@@ -255,7 +236,6 @@ body.page-cat::before{
   line-height: 1.25rem;
 }
 
-/* JS’te sağ tarafta wrapper var: itemRight */
 .itemRight{ display: contents; }
 
 .price{
@@ -275,12 +255,14 @@ body.page-cat::before{
   background: rgba(0,0,0,0.08);
 }
 
-/* ========== FOOTER ========== */
+/* ========== FOOTER ICONS ========== */
 .footer{
   display: flex;
   justify-content: center;
   gap: 22px;
-    margin-top: 20px;
+  margin-top: 20px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(0,0,0,0.08);
 }
 
 .icon-btn{
@@ -293,17 +275,18 @@ body.page-cat::before{
   color: #444;
   transition: transform .15s ease, background .15s ease;
 }
-.icon-btn svg { width: 22px; height: 22px; display:block; }
-.icon-btn:active{
-  transform: scale(0.95);
+
+.icon-btn svg{
+  width: 22px;
+  height: 22px;
+  display: block;
 }
 
-/* Instagram'a hafif vurgu (opsiyonel ama çok hoş) */
-.icon-btn.instagram{
-  color: #E1306C; /* Instagram pembe */
-}
+.icon-btn:active{ transform: scale(0.95); }
 
-/* ========== YUKARI ÇIK BUTONU ========== */
+.icon-btn.instagram{ color: #E1306C; }
+
+/* ========== TO TOP ========== */
 .toTop{
   position: fixed;
   right: 18px;
@@ -329,17 +312,4 @@ body.page-cat::before{
   object-fit: cover;
   object-position: center;
 }
-
-.hero.is-visible{
-  max-height: 320px;
-}
-
-/* Font garantisi (butonlar / başlıklar) */
-.btn,
-.menu-buttons,
-.menu-wrap,
-.heroText,
-.catTitle{
-  font-family: var(--font);
-}
-   body.page-home { background: red !important; }
+.hero.is-visible{ max-height: 320px; }
