@@ -277,7 +277,56 @@ html, body, button, input, textarea, select, a{
   font-weight: 400; /* ✅ her şey normal başlasın */
 }
 
+/* --- HEADER ÇAKIŞMA KESİN FIX (EN ALTA EKLE) --- */
+.page-cat .catHeader,
+.page-sub .catHeader {
+  display: grid !important;
+  grid-template-columns: max-content 1fr max-content !important;
+  align-items: center !important;
+  gap: 10px !important;
 
+  /* üstten nefes + safe area */
+  padding-top: calc(12px + env(safe-area-inset-top)) !important;
+  padding-left: 16px !important;
+  padding-right: 16px !important;
+  padding-bottom: 10px !important;
+
+  position: relative !important;
+}
+
+/* backLink kesinlikle absolute olmasın */
+.page-cat .catHeader .backLink,
+.page-sub .catHeader .backLink {
+  position: static !important;
+  white-space: nowrap !important;
+  line-height: 1.1 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Başlık ortalı ve taşmayı kontrol ediyoruz */
+.page-cat .catHeader .catTitle,
+.page-sub .catHeader .catTitle,
+.page-cat .catHeader #catTitle,
+.page-sub .catHeader #catTitle {
+  margin: 0 !important;
+  padding: 0 !important;
+  text-align: center !important;
+  line-height: 1.15 !important;
+
+  /* çok uzun başlıkta çakışma yerine düzgün kısalsın */
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+/* Sağ tarafta "boş kolon" gibi davranacak küçük spacer */
+.page-cat .catHeader::after,
+.page-sub .catHeader::after {
+  content: "" !important;
+  width: 1px !important;
+  height: 1px !important;
+}
 
 
 
