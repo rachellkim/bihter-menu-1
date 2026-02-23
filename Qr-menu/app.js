@@ -17,7 +17,7 @@ const MAIN_SLUGS = [
  * Alt kategorisi olmayanlarda [] bırak.
  */
 const SUB_MAP = {
-  atistirmaliklar: [],
+  "atistirmaliklar": [],
   "sicak-kahveler": ["espresso-bazli", "aromali-ozel-kahveler", "filtreturk", "sicak-matcha"],
   "soguk-kahveler": ["sogukbazli", "soguk-matchalar", "frappeler"],
   "sicak-icecekler": [],
