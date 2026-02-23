@@ -317,12 +317,13 @@ body.page-cat::before{
 /* ===== HERO: DİKDÖRTGEN & ŞIK ===== */
 /* ALT KATEGORİ HERO FOTO */
 /* HERO: bardak görünsün diye kadrajı aşağı al */
+/* ===== SUB HERO — BARDAK ÜSTÜ GÖRÜNSÜN ===== */
 body.page-sub .hero{
   width: 100%;
-  height: 220px;
+  height: 220px;              /* dikdörtgen */
   border-radius: 20px;
-  object-fit: cover;
-  object-position: center 65%;  /* 🔥 50% orta, 70% daha aşağı */
+  object-fit: cover;          /* banner gibi doldur */
+  object-position: center top;/* 🔥 ÜST KISIM SABİT */
   display: block;
   margin-bottom: 18px;
 }
@@ -330,27 +331,6 @@ body.page-sub .hero{
 @media (max-width: 600px){
   body.page-sub .hero{
     height: 180px;
-    object-position: center 70%;
+    object-position: center top;
   }
 }
-/* ===== SUB PAGE: KART UZUN / FULL GÖRÜNSÜN ===== */
-body.page-sub .screen{
-  display: block;          /* center iptal */
-  padding-top: 24px;
-}
-
-body.page-sub .card{
-  min-height: calc(100vh - 48px); /* 🔥 kart uzar */
-}
-/* SUB: butonları tam ortala */
-body.page-sub .menu-buttons{
-  justify-items: center;   /* grid içindeki elemanları ortala */
-}
-
-body.page-sub .menu-buttons a,
-body.page-sub .btn{
-  width: 100%;
-  max-width: 360px;        /* ortada dursun, çok uzamasın */
-  text-align: center;
-}
-/* HERO: üst kısmı göster (kesik gibi durmasın) */
