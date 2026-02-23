@@ -125,14 +125,6 @@ body.page-cat::before{
 }
 
 /* Ana sayfa logo (Aşk-ı Bihter) */
-.page-home .logo{
-  width: 240px !important;
-  max-width: 90%;
-  height: auto;
-  margin: 0 auto 18px;
-  filter: drop-shadow(0 8px 18px rgba(0,0,0,0.15));
-  display: block;
-}
 
 .tagline{
   font-size: 18px;
