@@ -146,9 +146,9 @@ function renderIndex(data) {
   }
 }
 
-// ===== RENDER: SUB PAGE =====
 function renderSub(data) {
   const box = document.getElementById("subButtons");
+  const titleEl = document.getElementById("subTitle");
   if (!box) return;
 
   const mainSlug = qs("main");
@@ -159,7 +159,10 @@ function renderSub(data) {
     return;
   }
 
-  // ✅ HERO YOK: sadece kart arka planını ayarla
+  // ✅ BAŞLIK BURADA SET EDİLİYOR
+  if (titleEl) titleEl.textContent = getTitle(mainCat);
+
+  // ✅ kart arka planı
   setCardBgByMainSlug(mainSlug);
 
   const subs = SUB_MAP[mainSlug] || [];
