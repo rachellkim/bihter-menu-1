@@ -20,11 +20,7 @@ body{
   display: block;
 }
 
-@media (max-width: 480px){
-  .page-home .brand .logo{
-    width: 200px !important;
-  }
-
+@media (max-width: 480px) {
 }
 
 a{ text-decoration: none; color: inherit; }
@@ -173,7 +169,7 @@ body.page-cat::before{
   grid-template-columns: 1fr auto 64px; /* isim | fiyat | foto */
   align-items: center;
   gap: 12px;
-
+ font-size: 15px;      
   padding: 14px;
   border-radius: 16px;
 
@@ -184,7 +180,7 @@ body.page-cat::before{
 
 .itemMain{ min-width: 0; }
 .itemName{
-  font-size: 16px;
+  font-size: 15px; 
   font-weight: 650;  
   margin: 0;
 }
@@ -194,7 +190,7 @@ body.page-cat::before{
 .itemRight{ display: contents; }
 
 .price{
-  font-size: 18px;
+  font-size: 16px;  
   font-weight: 500;  
   opacity: .9;
   white-space: nowrap;
