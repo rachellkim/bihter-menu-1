@@ -18,11 +18,11 @@ const MAIN_SLUGS = [
  */
 const SUB_MAP = {
   atistirmaliklar: [],
-  "sicak-kahveler": ["espresso-bazli", "aromali-ozel-kahveler", "filtreturk","sicak-matcha"],
+  "sicak-kahveler": ["espresso-bazli", "aromali-ozel-kahveler", "filtreturk", "sicak-matcha"],
   "soguk-kahveler": ["sogukbazli", "soguk-matchalar", "frappeler"],
   "sicak-icecekler": [],
   "soguk-icecekler": [],
-  "tatlilar": [],
+  tatlilar: [],
 };
 
 // ===== HELPERS =====
@@ -46,34 +46,30 @@ function getTitle(cat) {
     ""
   );
 }
-function setSubBackgroundByMainSlug(mainSlug) {
-  // Buraya istediğin görselleri koy
-  const BG = {
-    "soguk-kahveler": 'url("https://.../soguk-bg.jpg")',
-    "sicak-kahveler": 'url("https://.../sicak-bg.jpg")',
+
+/**
+ * ✅ KART İÇİ OPak ARKAPLAN (HERO YOK)
+ * CSS: .card::before { background-image: var(--card-bg-img, none); opacity: ... }
+ */
+function setCardBgByMainSlug(mainSlug) {
+  // buraya kendi görsellerini koy
+  const BG_MAP = {
+    "soguk-kahveler": "https://static.wixstatic.com/media/b9ef37_d2f5aa4eb3c54500a2af1030b1a315b6~mv2.jpg",
+    "sicak-kahveler": "https://static.wixstatic.com/media/b9ef37_d2f5aa4eb3c54500a2af1030b1a315b6~mv2.jpg",
+    "sicak-icecekler": "https://static.wixstatic.com/media/b9ef37_d2f5aa4eb3c54500a2af1030b1a315b6~mv2.jpg",
+    "soguk-icecekler": "https://static.wixstatic.com/media/b9ef37_d2f5aa4eb3c54500a2af1030b1a315b6~mv2.jpg",
+    "tatlilar": "https://static.wixstatic.com/media/b9ef37_d2f5aa4eb3c54500a2af1030b1a315b6~mv2.jpg",
+    "atistirmaliklar": "https://static.wixstatic.com/media/b9ef37_d2f5aa4eb3c54500a2af1030b1a315b6~mv2.jpg",
+    "sicak-matcha": "https://static.wixstatic.com/media/b9ef37_d2f5aa4eb3c54500a2af1030b1a315b6~mv2.jpg",
   };
 
-  const val = BG[mainSlug] || "";
-  if (val) document.body.style.setProperty("--sub-bg", val);
-}
-/**
- * Worker şu an coverPhoto döndürüyor:
- * coverPhoto: firstAttachmentUrl(...)
- */
-function getHeroUrl(cat) {
-  const v =
-    cat?.coverPhoto ||
-    cat?.coverUrl ||
-    cat?.coverPhotoUrl ||
-    cat?.heroUrl ||
-    cat?.kapakFotoUrl ||
-    cat?.["Kapak Foto"] ||
-    cat?.cover ||
-    "";
+  const fallback =
+    "https://static.wixstatic.com/media/b9ef37_d2f5aa4eb3c54500a2af1030b1a315b6~mv2.jpg";
 
-  if (Array.isArray(v)) return v?.[0]?.url || "";
-  if (typeof v === "object" && v) return v?.url || "";
-  return v || "";
+  const url = BG_MAP[mainSlug] || fallback;
+
+  // CSS değişkenini set et
+  document.documentElement.style.setProperty("--card-bg-img", `url("${url}")`);
 }
 
 function formatPrice(p) {
@@ -101,28 +97,6 @@ function getProductImage(it) {
   if (Array.isArray(v)) return v?.[0]?.url || "";
   if (typeof v === "object" && v) return v?.url || "";
   return v || "";
-}
-
-function setHero(cat) {
-  const img = document.getElementById("heroImg");
-  const txt = document.getElementById("heroText");
-  if (!img && !txt) return;
-
-  const title = getTitle(cat);
-  const url = getHeroUrl(cat);
-
-  if (txt) txt.textContent = title;
-
-  if (img) {
-    if (url) {
-      img.src = url;
-      img.alt = title;
-      img.style.display = "block";
-      img.classList.add("is-visible");
-    } else {
-      img.style.display = "none";
-    }
-  }
 }
 
 async function getMenu() {
@@ -179,12 +153,14 @@ function renderSub(data) {
 
   const mainSlug = qs("main");
   const mainCat = findCategory(data, mainSlug);
+
   if (!mainCat) {
     box.innerHTML = `<p style="text-align:center; opacity:.7;">Kategori bulunamadı.</p>`;
     return;
   }
 
-  setHero(mainCat);
+  // ✅ HERO YOK: sadece kart arka planını ayarla
+  setCardBgByMainSlug(mainSlug);
 
   const subs = SUB_MAP[mainSlug] || [];
   box.innerHTML = "";
@@ -214,14 +190,18 @@ function renderCategory(data) {
 
   const slug = qs("cat");
   const cat = findCategory(data, slug);
+
   if (!cat) {
     itemsBox.innerHTML = `<p style="text-align:center; opacity:.7;">Kategori bulunamadı.</p>`;
     return;
   }
 
-  // başlık + hero
+  // başlık
   if (titleEl) titleEl.textContent = normTR(getTitle(cat));
-  setHero(cat);
+
+  // ✅ kategori sayfasında da kart arka planı istiyorsan:
+  // (Burada "main slug" yok, direkt kendi slug'ını verelim)
+  setCardBgByMainSlug(slug);
 
   // ürünler
   const items = sortItemsSafe(cat?.items || []);
@@ -243,14 +223,12 @@ function renderCategory(data) {
       ${desc ? `<p class="itemDesc">${desc}</p>` : ""}
     `;
 
-    // Sağ taraf wrapper (CSS'te display:contents yapıyoruz)
     const right = document.createElement("div");
     right.className = "itemRight";
 
     const p = document.createElement("div");
     p.className = "price";
     p.textContent = price;
-
     right.appendChild(p);
 
     if (imgUrl) {
@@ -264,7 +242,6 @@ function renderCategory(data) {
 
     card.appendChild(left);
     card.appendChild(right);
-
     itemsBox.appendChild(card);
   }
 }
@@ -309,6 +286,3 @@ function setupToTop() {
     }
   }
 })();
-
-
- 
