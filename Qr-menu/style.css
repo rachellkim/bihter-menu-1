@@ -435,4 +435,6 @@ html, body, button, input, textarea, select, a{
   }
 }
 
-
+.page-cat .catHeader {
+  outline: 3px dashed green !important;
+}
