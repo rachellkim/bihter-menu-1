@@ -12,18 +12,20 @@ body{
 
 /* === ANA SAYFA LOGO (AŞK-I BİHTER) === */
 .page-home .logo{
-  width: 200px;      
-  max-width: 85%;
+  width: 240px !important;      
+  max-width: 90%;
   height: auto;
-  margin: 0 auto 14px;
+  margin: 0 auto 18px;
    filter: drop-shadow(0 8px 18px rgba(0,0,0,0.15));
+  display: block;
 }
 
 @media (max-width: 480px){
-  .page-home .logo{
-    width: 170px;
+  .page-home .brand .logo{
+    width: 200px !important;
   }
-}
+
+
 
 a{ text-decoration: none; color: inherit; }
 
