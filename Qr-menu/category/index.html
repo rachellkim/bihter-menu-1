@@ -5,25 +5,35 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Kategori</title>
 
- <link rel="stylesheet" href="/style.css?v=20260223-105">
-<script src="/app.js?v=20260223-201" defer></script>
+  <!-- CSS / JS -->
+  <link rel="stylesheet" href="/style.css?v=20260223-300">
+  <script src="/app.js?v=20260223-300" defer></script>
+
+  <!-- ⚠️ CSS çalışmasa bile HEADER ASLA ÇAKIŞMAZ -->
+  <style>
+    .catHeader .backLink { display:block !important; }
+    .catHeader .catTitle { display:block !important; margin:0 !important; }
+  </style>
 </head>
 
 <body class="page-cat">
   <main class="screen">
     <section class="card wide">
+
       <header class="catHeader">
-  <a class="backLink" href="/">← Menü</a>
-  <h1 id="catTitle" class="catTitle">Kategori</h1>
-</header>
-      
- <div class="divider small"></div>
+        <a class="backLink" href="/">← Menü</a>
+        <h1 id="catTitle" class="catTitle">Kategori</h1>
+      </header>
+
+      <div class="divider small"></div>
+
       <div id="items" class="items"></div>
 
       <footer class="footer">
-        <a class="icon-btn" href="tel:+9005315832303" aria-label="Telefon">📞</a>
+        <a class="icon-btn" href="tel:+905315832303" aria-label="Telefon">📞</a>
         <a class="icon-btn" href="mailto:roccoinsaat@gmail.com" aria-label="E-posta">✉️</a>
       </footer>
+
     </section>
   </main>
 
