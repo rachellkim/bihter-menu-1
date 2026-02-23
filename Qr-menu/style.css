@@ -41,7 +41,11 @@ body.page-sub::before{
   transform: scale(1.05);
   z-index: -2;
 }
-
+@media (min-width: 900px){
+  body.page-sub .card.wide{
+    max-width: 680px;
+  }
+}
 /* overlay */
 body::after{
   content:"";
