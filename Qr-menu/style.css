@@ -325,6 +325,9 @@ body.page-sub .btn{
 /* =========================================================
    KART İÇİ OPak ARKA PLAN (HERO YOK)
    ========================================================= */
+/* =========================================================
+   KART İÇİ OPak ARKA PLAN (JS ile değişen)
+   ========================================================= */
 body.page-sub .card,
 body.page-cat .card{
   position: relative;
@@ -338,14 +341,14 @@ body.page-cat .card::before{
   position: absolute;
   inset: 0;
 
-  background-image: url("https://static.wixstatic.com/media/b9ef37_d2f5aa4eb3c54500a2af1030b1a315b6~mv2.jpg");
+  /* 🔥 JS burayı değiştirecek */
+  background-image: var(--card-bg-img, none);
   background-size: cover;
   background-position: center;
 
-  opacity: 0.10;     /* 0.08–0.15 arası oynat */
+  opacity: 0.10;          /* istersen 0.08 - 0.15 */
   filter: blur(3px);
   transform: scale(1.1);
-
   z-index: 0;
 }
 
