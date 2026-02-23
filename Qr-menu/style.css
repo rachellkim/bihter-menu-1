@@ -79,6 +79,7 @@ body::after{
 body.page-home::before{
   background-image: url("https://static.wixstatic.com/media/b9ef37_d2f5aa4eb3c54500a2af1030b1a315b6~mv2.jpg");
 }
+   
 
 body.page-sub::before{
   background-image: var(--sub-bg, none);
