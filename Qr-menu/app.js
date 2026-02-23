@@ -309,3 +309,14 @@ function setupToTop() {
     }
   }
 })();
+
+
+  const heroUrl =
+    "https://static.wixstatic.com/media/b9ef37_d2f5aa4eb3c54500a2af1030b1a315b6~mv2.jpg";
+
+  const hero = document.getElementById("heroImg");
+  if (hero) {
+    hero.src = heroUrl;
+    hero.style.display = "block";
+  }
+
