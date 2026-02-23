@@ -358,3 +358,25 @@ body.page-cat .card > *{
   position: relative;
   z-index: 1;
 }
+
+/* Sub ve Kategori sayfaları ortada değil, yukarıdan başlasın */
+body.page-sub .screen,
+body.page-cat .screen{
+  justify-content: flex-start;
+  padding-top: 28px;
+  padding-bottom: 28px;
+}
+/* Sub butonlarının listesi */
+body.page-sub #subs{
+  display: flex;
+  flex-direction: column;
+  align-items: center;   /* TAM center */
+  gap: 14px;
+}
+
+/* Butonlar */
+body.page-sub .menuBtn{
+  width: min(420px, 92%);
+  margin: 0 auto;        /* ekstra garanti */
+}
+
