@@ -67,7 +67,6 @@ body.page-cat::before{
 }
 
 /* ========== LAYOUT ========== */
-/* ✅ Grid değil flex: sayfa "uzun" görünür + flex-start çalışır */
 .screen{
   min-height: 100vh;
   display: flex;
@@ -215,18 +214,18 @@ body.page-cat::before{
 .btn:active,
 .menuBtn:active{ transform: scale(0.98); }
 
-/* ✅ SUB: tam center + genişlik kontrol (hem #subs hem .menu-buttons için) */
+/* ✅ SUB: butonlar TAM center + tek tip genişlik (hangi wrapper gelirse gelsin) */
+body.page-sub #subButtons,
+body.page-sub #subs,
 body.page-sub .menu-buttons{
+  width: 100%;
+  display: grid;
+  gap: 14px;
   justify-items: center;
 }
 
-body.page-sub #subs{
-  display: flex;
-  flex-direction: column;
-  align-items: center;    /* TAM center */
-  gap: 14px;
-}
-
+body.page-sub #subButtons a,
+body.page-sub #subs a,
 body.page-sub .menu-buttons a,
 body.page-sub .btn,
 body.page-sub .menuBtn{
@@ -330,7 +329,7 @@ body.page-sub .menuBtn{
 }
 
 /* =========================================================
-   ✅ KART İÇİ OPak ARKA PLAN (HERO YOK) - GARANTİLİ
+   ✅ KART İÇİ OPak ARKA PLAN (SUB + CAT)
    ========================================================= */
 body.page-sub .card,
 body.page-cat .card{
@@ -338,8 +337,8 @@ body.page-cat .card{
   overflow: hidden;
 }
 
-/* kartın arka plan resmi */
-
+/* ✅ kartın arka plan resmi (SUB + CAT için de var!) */
+body.page-sub .card::before,
 body.page-cat .card::before{
   content: "";
   position: absolute;
@@ -362,30 +361,9 @@ body.page-cat .card > *{
 }
 
 /* =========================
-   SUB SAYFASI = HOME GİBİ (FLEX ile)
+   SUB SAYFASI = HOME GİBİ (dar kart)
    ========================= */
-body.page-sub .screen{
-  display: flex;              /* HOME zaten flex */
-  flex-direction: column;
-  align-items: center;        /* yatay merkez */
-  justify-content: center;    /* dikey merkez */
-  min-height: 100vh;
-  padding: 28px 16px;
-}
-
-/* Sub kartı büyümesin (wide olsa bile) */
 body.page-sub .card,
 body.page-sub .card.wide{
-  max-width: 420px;           /* HOME hissi */
-}
-
-body.page-sub #subButtons{
-  width: 100%;
-  display: grid;
-  gap: 14px;
-  justify-items: center;
-}
-
-body.page-sub #subButtons a{
-  width: min(420px, 92%);
+  max-width: 420px;  /* home hissi */
 }
