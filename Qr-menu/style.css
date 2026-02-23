@@ -119,19 +119,14 @@ body.page-cat::before{
 /* ========== MOBIL HEADER FIX ========== */
 
 
-  .backLink {
-    position: static;          /* absolute'i kapat */
-    align-self: flex-start;    /* sola yasla */
-    font-size: 14px;
-    opacity: 0.7;
-  }
+.backLink {
+  display: block !important;
+}
 
-  .catTitle {
-    font-size: 20px;
-    letter-spacing: 2px;
-    margin-top: 2px;
-    text-align: center;
-  }
+
+.catTitle {
+  display: block !important;
+}
 }
 
 /* ========== ANA BUTONLAR (HOME / SUB) ========== */
