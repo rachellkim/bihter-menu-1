@@ -91,13 +91,6 @@ body.page-cat::before{
 
 .card.wide{ max-width: 520px; }
 
-/* Desktop'ta SUB kartı büyüt */
-@media (min-width: 900px){
-  body.page-sub .card.wide{
-    max-width: 680px;
-  }
-}
-
 /* ========== BRAND / LOGO ========== */
 .brand{ text-align: center; }
 
@@ -369,26 +362,21 @@ body.page-cat .card > *{
 }
 
 /* ✅ Sub ve Kategori sayfaları ortada değil, yukarıdan başlasın */
-body.page-sub .screen,
-body.page-cat .screen{
-  justify-content: flex-start;
-  padding-top: 28px;
-  padding-bottom: 28px;
-}
-
-/* ✅ SUB sayfasında kart DİKİNE UZASIN */
-body.page-sub .card{
-  min-height: auto;
-  height: auto;
-  padding-bottom: 32px; /* altta ferahlık */
-}
-
-/* Kart içindeki butonlar arttıkça kart uzasın */
-body.page-sub .menu-buttons,
-body.page-sub #subs{
-  width: 100%;
-}
-/* Screen artık kartı sıkıştırmasın */
+/* =========================
+   SUB SAYFASI = HOME GİBİ
+   ========================= */
 body.page-sub .screen{
-  display: block;
+  display: grid;          /* home gibi */
+  place-items: center;    /* tam ortala */
+  padding: 28px 16px;
+}
+
+/* Sub kartı büyümesin (yatay dev olmasın) */
+body.page-sub .card.wide{
+  max-width: 520px;       /* home ile aynı hissiyat */
+}
+
+/* Eğer sub için önceden eklediğimiz start/left override'lar varsa iptal */
+body.page-sub .screen{
+  justify-content: initial;
 }
