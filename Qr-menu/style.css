@@ -318,12 +318,16 @@ body.page-cat::before{
 /* ALT KATEGORİ HERO FOTO */
 /* HERO: bardak görünsün diye kadrajı aşağı al */
 /* ===== SUB HERO — BARDAK ÜSTÜ GÖRÜNSÜN ===== */
+/* ===== SUB HERO — BARDAK ÜSTÜ GÖRÜNSÜN (İNCE AYAR) ===== */
 body.page-sub .hero{
   width: 100%;
-  height: 220px;              /* dikdörtgen */
+  height: 220px;
   border-radius: 20px;
-  object-fit: cover;          /* banner gibi doldur */
-  object-position: center top;/* 🔥 ÜST KISIM SABİT */
+  object-fit: cover;
+
+  /* 🔥 kadrajı aşağı kaydır: 60–80 arası oynatabilirsin */
+  object-position: center 70%;
+
   display: block;
   margin-bottom: 18px;
 }
@@ -331,6 +335,6 @@ body.page-sub .hero{
 @media (max-width: 600px){
   body.page-sub .hero{
     height: 180px;
-    object-position: center top;
+    object-position: center 72%;
   }
 }
