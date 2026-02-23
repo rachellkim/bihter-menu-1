@@ -302,3 +302,6 @@ html, body, button, input, textarea, select, a{
     padding: 0 !important;
   }
 }
+body {
+  outline: 6px solid red !important;
+}
