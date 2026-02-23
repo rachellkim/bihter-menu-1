@@ -204,16 +204,12 @@ function renderCategory(data) {
   if (titleEl) titleEl.textContent = normTR(getTitle(cat));
 
 const items = [...(cat?.items || [])].sort((a, b) => {
-  const ax = Number(
-    a?.["Sira"] ?? a?.["Sıra"] ?? a?.Sira ?? a?.order ?? a?.Order ?? 999999
-  );
-  const bx = Number(
-    b?.["Sira"] ?? b?.["Sıra"] ?? b?.Sira ?? b?.order ?? b?.Order ?? 999999
-  );
+  const ax = Number(a?.["Sira"] ?? a?.["Sıra"] ?? a?.Sira ?? 999999);
+  const bx = Number(b?.["Sira"] ?? b?.["Sıra"] ?? b?.Sira ?? 999999);
   return ax - bx;
 });
-  itemsBox.innerHTML = "";
 
+  
   for (const it of items) {
     const name = it?.["Ürün Adı"] || it?.["Urun Adi"] || it?.name || "";
     const desc =
