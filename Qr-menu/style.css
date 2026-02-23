@@ -339,7 +339,7 @@ body.page-cat .card{
 }
 
 /* kartın arka plan resmi */
-body.page-sub .card::before,
+
 body.page-cat .card::before{
   content: "";
   position: absolute;
@@ -361,22 +361,31 @@ body.page-cat .card > *{
   z-index: 1;
 }
 
-/* ✅ Sub ve Kategori sayfaları ortada değil, yukarıdan başlasın */
 /* =========================
-   SUB SAYFASI = HOME GİBİ
+   SUB SAYFASI = HOME GİBİ (FLEX ile)
    ========================= */
 body.page-sub .screen{
-  display: grid;          /* home gibi */
-  place-items: center;    /* tam ortala */
+  display: flex;              /* HOME zaten flex */
+  flex-direction: column;
+  align-items: center;        /* yatay merkez */
+  justify-content: center;    /* dikey merkez */
+  min-height: 100vh;
   padding: 28px 16px;
 }
 
-/* Sub kartı büyümesin (yatay dev olmasın) */
+/* Sub kartı büyümesin (wide olsa bile) */
+body.page-sub .card,
 body.page-sub .card.wide{
-  max-width: 520px;       /* home ile aynı hissiyat */
+  max-width: 420px;           /* HOME hissi */
 }
 
-/* Eğer sub için önceden eklediğimiz start/left override'lar varsa iptal */
-body.page-sub .screen{
-  justify-content: initial;
+body.page-sub #subButtons{
+  width: 100%;
+  display: grid;
+  gap: 14px;
+  justify-items: center;
+}
+
+body.page-sub #subButtons a{
+  width: min(420px, 92%);
 }
