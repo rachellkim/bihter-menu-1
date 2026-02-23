@@ -67,10 +67,13 @@ body.page-cat::before{
 }
 
 /* ========== LAYOUT ========== */
+/* ✅ Grid değil flex: sayfa "uzun" görünür + flex-start çalışır */
 .screen{
   min-height: 100vh;
-  display: grid;
-  place-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;          /* kart ortada */
+  justify-content: center;      /* home için ortada kalsın */
   padding: 28px 16px;
 }
 
@@ -202,7 +205,8 @@ body.page-cat::before{
 /* JS .btn verse de vermese de BUTON görünümü */
 .menu-buttons a,
 #categoryButtons a,
-.btn{
+.btn,
+.menuBtn{
   display: block;
   background: rgba(150, 55, 55, 0.75);
   color: #fff;
@@ -215,16 +219,26 @@ body.page-cat::before{
 
 .menu-buttons a:active,
 #categoryButtons a:active,
-.btn:active{ transform: scale(0.98); }
+.btn:active,
+.menuBtn:active{ transform: scale(0.98); }
 
-/* SUB: butonları tam ortala + genişliği kontrol et */
+/* ✅ SUB: tam center + genişlik kontrol (hem #subs hem .menu-buttons için) */
 body.page-sub .menu-buttons{
   justify-items: center;
 }
+
+body.page-sub #subs{
+  display: flex;
+  flex-direction: column;
+  align-items: center;    /* TAM center */
+  gap: 14px;
+}
+
 body.page-sub .menu-buttons a,
-body.page-sub .btn{
-  width: 100%;
-  max-width: 360px;
+body.page-sub .btn,
+body.page-sub .menuBtn{
+  width: min(420px, 92%);
+  margin: 0 auto;
 }
 
 /* ========== ITEMS ========== */
@@ -323,10 +337,7 @@ body.page-sub .btn{
 }
 
 /* =========================================================
-   KART İÇİ OPak ARKA PLAN (HERO YOK)
-   ========================================================= */
-/* =========================================================
-   KART İÇİ OPak ARKA PLAN (JS ile değişen)
+   ✅ KART İÇİ OPak ARKA PLAN (HERO YOK) - GARANTİLİ
    ========================================================= */
 body.page-sub .card,
 body.page-cat .card{
@@ -340,16 +351,14 @@ body.page-cat .card::before{
   content: "";
   position: absolute;
   inset: 0;
-
-  /* 🔥 JS burayı değiştirecek */
   background-image: var(--card-bg-img, none);
   background-size: cover;
   background-position: center;
-
-  opacity: 0.10;          /* istersen 0.08 - 0.15 */
+  opacity: 0.10;
   filter: blur(3px);
   transform: scale(1.1);
   z-index: 0;
+  pointer-events: none;
 }
 
 /* kart içeriği üstte kalsın */
@@ -359,24 +368,10 @@ body.page-cat .card > *{
   z-index: 1;
 }
 
-/* Sub ve Kategori sayfaları ortada değil, yukarıdan başlasın */
+/* ✅ Sub ve Kategori sayfaları ortada değil, yukarıdan başlasın */
 body.page-sub .screen,
 body.page-cat .screen{
   justify-content: flex-start;
   padding-top: 28px;
   padding-bottom: 28px;
 }
-/* Sub butonlarının listesi */
-body.page-sub #subs{
-  display: flex;
-  flex-direction: column;
-  align-items: center;   /* TAM center */
-  gap: 14px;
-}
-
-/* Butonlar */
-body.page-sub .menuBtn{
-  width: min(420px, 92%);
-  margin: 0 auto;        /* ekstra garanti */
-}
-
