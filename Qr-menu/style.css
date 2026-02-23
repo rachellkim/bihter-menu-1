@@ -328,6 +328,72 @@ html, body, button, input, textarea, select, a{
   height: 1px !important;
 }
 
+/* ===== MOBILDE ÇAKIŞMAYI SIFIRLAYAN SERT FIX (EN ALTA) ===== */
+@media (max-width: 520px) {
+  .page-cat .catHeader,
+  .page-sub .catHeader {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    grid-template-rows: auto auto auto !important; /* 🔥 KRİTİK */
+    gap: 6px !important;
+  }
 
+  .page-cat .catHeader .divider,
+  .page-sub .catHeader .divider {
+    grid-row: 3 !important;
+  }
+}
+
+  /* Geri link: 1. satır */
+  .page-cat .catHeader .backLink,
+  .page-sub .catHeader .backLink {
+    grid-row: 1 !important;
+    grid-column: 1 !important;
+
+    position: static !important;
+    display: inline-block !important;
+    white-space: nowrap !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 1.1 !important;
+  }
+
+  /* Başlık: 2. satır */
+  .page-cat .catHeader .catTitle,
+  .page-sub .catHeader .catTitle,
+  .page-cat .catHeader #catTitle,
+  .page-sub .catHeader #catTitle {
+    grid-row: 2 !important;
+    grid-column: 1 !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    text-align: left !important;   /* mobilde en temiz */
+    line-height: 1.15 !important;
+
+    /* Uzunsa taşmasın */
+    overflow-wrap: anywhere !important;
+    white-space: normal !important;
+  }
+
+  /* Divider header içindeyse, alta insin ve tek satır kaplasın */
+  .page-cat .catHeader .divider,
+  .page-sub .catHeader .divider {
+    grid-row: 3 !important;
+    grid-column: 1 !important;
+  }
+
+  /* Absolute/top/transform ile tekrar üstte bindiren kuralları öldür */
+  .page-cat .backLink,
+  .page-sub .backLink {
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    transform: none !important;
+  }
+}
 
 
