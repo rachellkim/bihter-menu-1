@@ -263,24 +263,31 @@ html, body, button, input, textarea, select, a{
 }
 
 /* ===== TEST (GELİYOR MU?) ===== */
-body { outline: 6px solid red !important; }
+/* ===== CATEGORY HEADER: KESİN FIX ===== */
+.page-cat .catHeader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px 6px;
+}
 
-/* ===== MOBIL HEADER: SADECE FONT KÜÇÜLT + TAŞIR ===== */
-@media (max-width: 600px) {
-  .page-cat .backLink,
-  .page-sub .backLink {
-    font-size: 12px !important;
-  }
+.page-cat .backLink {
+  align-self: flex-start;
+  display: block;          /* aynı satıra asla gelmesin */
+  position: static;
+  white-space: nowrap;
+  font-size: 13px;
+  opacity: .75;
+}
 
-  .page-cat .catTitle,
-  .page-cat #catTitle,
-  .page-sub .catTitle,
-  .page-sub #catTitle {
-    font-size: 16px !important;
-    letter-spacing: 1px !important;
-    line-height: 1.15 !important;
-
-    white-space: normal !important;      /* 2 satıra düşebilir */
-    overflow-wrap: anywhere !important;
-  }
+.page-cat .catTitle,
+.page-cat #catTitle {
+  display: block;          /* aynı satıra asla gelmesin */
+  margin: 0;
+  text-align: center;
+  font-size: 16px;         /* başlığı küçülttük */
+  letter-spacing: 1px;
+  line-height: 1.2;
+  overflow-wrap: anywhere; /* uzunsa 2 satıra düşsün */
 }
