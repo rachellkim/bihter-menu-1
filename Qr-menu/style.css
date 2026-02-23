@@ -20,8 +20,6 @@ body{
   display: block;
 }
 
-@media (max-width: 480px) {
-}
 
 a{ text-decoration: none; color: inherit; }
 
@@ -277,10 +275,10 @@ html, body, button, input, textarea, select, a{
   .page-cat #catTitle,
   .page-sub .catTitle,
   .page-sub #catTitle {
-    font-size: 16px !important;      /* 20 -> 16 */
-    letter-spacing: 1px !important;  /* 2 -> 1 */
-    line-height: 1.15 !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
   }
+}
 
   .page-cat .backLink,
   .page-sub .backLink {
