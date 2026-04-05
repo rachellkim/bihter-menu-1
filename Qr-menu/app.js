@@ -2,7 +2,7 @@
 // ===== CONFIG =====
 const API_URL = "https://raw.githubusercontent.com/rachellkim/menu-json/main/menu.json";
 
-// Ana sayfada görünecek ana kategori slug'ları
+// Ana kategori slug'ları
 const MAIN_SLUGS = [
   "tatlilar",
   "soguk-kahveler",
@@ -13,7 +13,7 @@ const MAIN_SLUGS = [
   "sicak-matcha",
 ];
 
-// ===== SUB CATEGORY MAP =====
+// Alt kategori map
 const SUB_MAP = {
   "atistirmaliklar": [],
   "sicak-kahveler": ["espresso-bazli", "aromali-ozel-kahveler", "filtreturk", "sicak-matcha"],
@@ -105,7 +105,7 @@ function renderCategory(data) {
   const cat = data.find((c) => getSlug(c) === slug);
 
   if (!cat) {
-    itemsBox.innerHTML = `<p>Kategori bulunamadı</p>`;
+    itemsBox.innerHTML = `<p style="text-align:center;">Kategori bulunamadı</p>`;
     return;
   }
 
@@ -118,30 +118,71 @@ function renderCategory(data) {
     const card = document.createElement("article");
     card.className = "item";
 
-    card.innerHTML = `
-      <div>
-        <h3>${it.name}</h3>
-        <p>${it.description_tr || ""}</p>
-      </div>
-      <div>
-        <strong>${it.price_display || ""}</strong>
-        ${it.image ? `<img src="${it.image}" width="120">` : ""}
-      </div>
+    const left = document.createElement("div");
+    left.className = "itemMain";
+    left.innerHTML = `
+      <h3 class="itemName">${normTR(it.name)}</h3>
+      ${it.description_tr ? `<p class="itemDesc">${normTR(it.description_tr)}</p>` : ""}
     `;
 
+    const right = document.createElement("div");
+    right.className = "itemRight";
+
+    const price = document.createElement("div");
+    price.className = "price";
+    price.textContent = it.price_display || "";
+
+    right.appendChild(price);
+
+    if (it.image) {
+      const img = document.createElement("img");
+      img.className = "thumb";
+      img.src = it.image;
+      img.alt = it.name;
+      img.loading = "lazy";
+      right.appendChild(img);
+    }
+
+    card.appendChild(left);
+    card.appendChild(right);
     itemsBox.appendChild(card);
   }
 }
 
+// ===== TO TOP =====
+function setupToTop() {
+  const btn = document.getElementById("toTopBtn");
+  if (!btn) return;
+
+  btn.addEventListener("click", () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+
+  window.addEventListener("scroll", () => {
+    btn.style.display = window.scrollY > 400 ? "block" : "none";
+  });
+
+  btn.style.display = "none";
+}
+
 // ===== INIT =====
-(async function init() {
+document.addEventListener("DOMContentLoaded", async () => {
   try {
+    setupToTop();
     const data = await getMenu();
     renderIndex(data);
     renderSub(data);
     renderCategory(data);
   } catch (e) {
     console.error(e);
+    const box =
+      document.getElementById("categoryButtons") ||
+      document.getElementById("subButtons") ||
+      document.getElementById("items");
+
+    if (box) {
+      box.innerHTML = `<p style="text-align:center; color:#a00;">Yüklenemedi</p>`;
+    }
   }
-})();
+});
 ```
