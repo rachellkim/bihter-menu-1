@@ -1,6 +1,6 @@
-
 // ===== CONFIG =====
-const API_URL = "https://spring-flower-9430menu-api.zynpsude-onder.workers.dev/";
+const API_URL = "https://menu-worker.sudeonder.workers.dev/menu";
+
 // Ana sayfada görünecek ana kategori slug'ları (Airtable slug(text))
 const MAIN_SLUGS = [
   "tatlilar",
@@ -14,7 +14,6 @@ const MAIN_SLUGS = [
 
 /**
  * ANA -> ALT kategori eşlemesi (Airtable slug'larıyla)
- * Alt kategorisi olmayanlarda [] bırak.
  */
 const SUB_MAP = {
   "atistirmaliklar": [],
@@ -27,32 +26,11 @@ const SUB_MAP = {
 
 // ===== HELPERS =====
 const qs = (k) => new URLSearchParams(location.search).get(k) || "";
+const normTR = (s) => String(s ?? "").trim();
+const getSlug = (cat) => cat?.slug || cat?.slugText || cat?.["slug(text)"] || "";
+const getTitle = (cat) => cat?.titleTR || cat?.title || getSlug(cat) || "";
 
-function normTR(s) {
-  return String(s ?? "").trim();
-}
-
-function getSlug(cat) {
-  return cat?.slug || cat?.slugText || cat?.["slug(text)"] || cat?.["slug"] || "";
-}
-
-function getTitle(cat) {
-  return (
-    cat?.titleTR ||
-    cat?.["Kategori TR"] ||
-    cat?.title ||
-    cat?.name ||
-    getSlug(cat) ||
-    ""
-  );
-}
-
-/**
- * ✅ ARKAPLANLAR (BODY + KART)
- * CSS:
- *  - body.page-sub::before { background-image: var(--sub-bg, none); }
- *  - .card::before { background-image: var(--card-bg-img, none); }
- */
+// Card & body arkaplan
 function setBgsBySlug(slug) {
   const BG_MAP = {
     "soguk-kahveler": "https://static.wixstatic.com/media/b9ef37_d2f5aa4eb3c54500a2af1030b1a315b6~mv2.jpg",
@@ -63,17 +41,8 @@ function setBgsBySlug(slug) {
     "atistirmaliklar": "https://static.wixstatic.com/media/b9ef37_d2f5aa4eb3c54500a2af1030b1a315b6~mv2.jpg",
     "sicak-matcha": "https://static.wixstatic.com/media/b9ef37_d2f5aa4eb3c54500a2af1030b1a315b6~mv2.jpg",
   };
-
-  const fallback =
-    "https://static.wixstatic.com/media/b9ef37_d2f5aa4eb3c54500a2af1030b1a315b6~mv2.jpg";
-
-  const url = BG_MAP[slug] || fallback;
-
-  // ✅ Kart içi opak arka plan
+  const url = BG_MAP[slug] || BG_MAP["tatlilar"];
   document.documentElement.style.setProperty("--card-bg-img", `url("${url}")`);
-
-  // ✅ Sub sayfasının blur body background’u
-  // Not: sadece page-sub’da etkili (CSS öyle)
   document.documentElement.style.setProperty("--sub-bg", `url("${url}")`);
 }
 
@@ -84,44 +53,18 @@ function formatPrice(p) {
   return s;
 }
 
-/**
- * Ürün görseli: Worker image döndürüyor ama eski alan adlarını da destekleyelim.
- */
 function getProductImage(it) {
-  const v =
-    it?.image ||
-    it?.photoUrl ||
-    it?.imageUrl ||
-    it?.imgUrl ||
-    it?.photo ||
-    it?.["Ürün Fotoğrafı"] ||
-    it?.["Urun Fotograf"] ||
-    it?.urunFotografi ||
-    "";
-
-  if (Array.isArray(v)) return v?.[0]?.url || "";
-  if (typeof v === "object" && v) return v?.url || "";
-  return v || "";
+  if (!it?.image) return "";
+  if (Array.isArray(it.image)) return it.image[0]?.url || "";
+  return it.image?.url || it.image || "";
 }
 
+// ===== FETCH MENU =====
 async function getMenu() {
-  const r = await fetch(API_URL, { cache: "no-store" });
-  if (!r.ok) throw new Error("Menu API hata: " + r.status);
-  return await r.json();
-}
-
-function findCategory(data, slug) {
-  const cats = data?.categories || [];
-  return cats.find((c) => getSlug(c) === slug) || null;
-}
-
-function sortItemsSafe(items) {
-  // Worker artık Sira’ya göre gönderiyor ama güvenlik için:
-  return [...(items || [])].sort((a, b) => {
-    const ax = Number(a?.Sira ?? a?.["Sira"] ?? a?.["Sıra"] ?? a?.order ?? a?.Order ?? 999999);
-    const bx = Number(b?.Sira ?? b?.["Sira"] ?? b?.["Sıra"] ?? b?.order ?? b?.Order ?? 999999);
-    return ax - bx;
-  });
+  const res = await fetch(API_URL, { cache: "no-store" });
+  if (!res.ok) throw new Error("Menu fetch error: " + res.status);
+  const json = await res.json();
+  return json.categories || [];
 }
 
 // ===== RENDER: MAIN INDEX =====
@@ -129,7 +72,7 @@ function renderIndex(data) {
   const box = document.getElementById("categoryButtons");
   if (!box) return;
 
-  const catsBySlug = new Map((data?.categories || []).map((c) => [getSlug(c), c]));
+  const catsBySlug = new Map(data.map((c) => [getSlug(c), c]));
 
   box.innerHTML = "";
   for (const slug of MAIN_SLUGS) {
@@ -158,17 +101,14 @@ function renderSub(data) {
   if (!box) return;
 
   const mainSlug = qs("main");
-  const mainCat = findCategory(data, mainSlug);
+  const mainCat = data.find((c) => getSlug(c) === mainSlug);
 
   if (!mainCat) {
     box.innerHTML = `<p style="text-align:center; opacity:.7;">Kategori bulunamadı.</p>`;
     return;
   }
 
-  // ✅ Başlık
   if (titleEl) titleEl.textContent = getTitle(mainCat);
-
-  // ✅ Hem body blur bg hem kart içi bg
   setBgsBySlug(mainSlug);
 
   const subs = SUB_MAP[mainSlug] || [];
@@ -180,7 +120,7 @@ function renderSub(data) {
   }
 
   for (const subSlug of subs) {
-    const cat = findCategory(data, subSlug);
+    const cat = data.find((c) => getSlug(c) === subSlug);
     const title = cat ? getTitle(cat) : subSlug;
 
     const a = document.createElement("a");
@@ -191,35 +131,30 @@ function renderSub(data) {
   }
 }
 
-// ===== RENDER: CATEGORY PAGE (PRODUCTS) =====
+// ===== RENDER: CATEGORY PAGE =====
 function renderCategory(data) {
   const itemsBox = document.getElementById("items");
   const titleEl = document.getElementById("catTitle");
   if (!itemsBox) return;
 
   const slug = qs("cat");
-  const cat = findCategory(data, slug);
+  const cat = data.find((c) => getSlug(c) === slug);
 
   if (!cat) {
     itemsBox.innerHTML = `<p style="text-align:center; opacity:.7;">Kategori bulunamadı.</p>`;
     return;
   }
 
-  // başlık
   if (titleEl) titleEl.textContent = normTR(getTitle(cat));
-
-  // ✅ Kategori sayfası kart içi bg
-  // (slug bir main slug ise direkt map'ten bulur; değilse fallback)
   setBgsBySlug(slug);
 
-  // ürünler
-  const items = sortItemsSafe(cat?.items || []);
+  const items = [...(cat.items || [])].sort((a, b) => (a.Sira ?? 999999) - (b.Sira ?? 999999));
   itemsBox.innerHTML = "";
 
   for (const it of items) {
-    const name = normTR(it?.name || it?.["Ürün Adı"] || it?.["Urun Adi"] || "");
-    const desc = normTR(it?.desc || it?.descTR || it?.["Açıklama TR"] || it?.["Aciklama TR"] || "");
-    const price = formatPrice(it?.price || it?.priceText || it?.["Fiyat"] || it?.["Price"] || "");
+    const name = normTR(it.name);
+    const desc = normTR(it.desc);
+    const price = formatPrice(it.price);
     const imgUrl = getProductImage(it);
 
     const card = document.createElement("article");
@@ -227,10 +162,7 @@ function renderCategory(data) {
 
     const left = document.createElement("div");
     left.className = "itemMain";
-    left.innerHTML = `
-      <h3 class="itemName">${name}</h3>
-      ${desc ? `<p class="itemDesc">${desc}</p>` : ""}
-    `;
+    left.innerHTML = `<h3 class="itemName">${name}</h3>${desc ? `<p class="itemDesc">${desc}</p>` : ""}`;
 
     const right = document.createElement("div");
     right.className = "itemRight";
@@ -260,38 +192,26 @@ function setupToTop() {
   const btn = document.getElementById("toTopBtn");
   if (!btn) return;
 
-  btn.addEventListener("click", () =>
-    window.scrollTo({ top: 0, behavior: "smooth" })
-  );
+  btn.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
 
-  window.addEventListener(
-    "scroll",
-    () => {
-      btn.style.display = window.scrollY > 400 ? "block" : "none";
-    },
-    { passive: true }
-  );
+  window.addEventListener("scroll", () => {
+    btn.style.display = window.scrollY > 400 ? "block" : "none";
+  }, { passive: true });
 
   btn.style.display = "none";
 }
 
-// ===== BOOT =====
+// ===== INIT =====
 (async function init() {
   try {
     setupToTop();
     const data = await getMenu();
-
     renderIndex(data);
     renderSub(data);
     renderCategory(data);
   } catch (e) {
     console.error(e);
-    const box =
-      document.getElementById("categoryButtons") ||
-      document.getElementById("subButtons") ||
-      document.getElementById("items");
-    if (box) {
-      box.innerHTML = `<p style="text-align:center; color:#a00;">Yüklenemedi. (API / veri hatası)</p>`;
-    }
+    const box = document.getElementById("categoryButtons") || document.getElementById("subButtons") || document.getElementById("items");
+    if (box) box.innerHTML = `<p style="text-align:center; color:#a00;">Yüklenemedi. (API / veri hatası)</p>`;
   }
 })();
