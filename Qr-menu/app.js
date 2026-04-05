@@ -1,5 +1,5 @@
 // ===== CONFIG =====
-const API_URL = "/api/menu";
+const API_URL = "/menu.json";
 
 // Ana sayfada görünecek ana kategori slug'ları (Airtable slug(text))
 const MAIN_SLUGS = [
