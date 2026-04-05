@@ -5,11 +5,49 @@
       "titleTR": "Tatlılar",
       "items": [
         {
-          "name": "Deneme Ürün",
-          "desc": "Test açıklama",
-          "price": "100"
+          "name": "Cheesecake",
+          "desc": "Frambuaz soslu",
+          "price": "120",
+          "image": ""
         }
       ]
+    },
+    {
+      "slug": "sicak-kahveler",
+      "titleTR": "Sıcak Kahveler",
+      "items": [
+        {
+          "name": "Latte",
+          "desc": "",
+          "price": "90",
+          "image": ""
+        }
+      ]
+    },
+    {
+      "slug": "soguk-kahveler",
+      "titleTR": "Soğuk Kahveler",
+      "items": []
+    },
+    {
+      "slug": "sicak-icecekler",
+      "titleTR": "Sıcak İçecekler",
+      "items": []
+    },
+    {
+      "slug": "soguk-icecekler",
+      "titleTR": "Soğuk İçecekler",
+      "items": []
+    },
+    {
+      "slug": "atistirmaliklar",
+      "titleTR": "Atıştırmalıklar",
+      "items": []
+    },
+    {
+      "slug": "sicak-matcha",
+      "titleTR": "Sıcak Matcha",
+      "items": []
     }
   ]
 }
