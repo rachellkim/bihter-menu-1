@@ -1,6 +1,6 @@
 ```javascript
 // ===== CONFIG =====
-const API_URL = "https://menu-worker.sudeonder.workers.dev/menu";
+const API_URL = "https://raw.githubusercontent.com/rachellkim/menu-json/main/menu.json";
 
 // Ana sayfada görünecek ana kategori slug'ları
 const MAIN_SLUGS = [
