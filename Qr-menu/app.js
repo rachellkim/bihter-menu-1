@@ -101,28 +101,27 @@ function renderCategory(data) {
   const titleEl = document.getElementById("catTitle");
   if (!itemsBox) return;
 
-  const slug = qs("cat");
-  const cat = data.find((c) => getSlug(c) === slug);
+  const slug = new URLSearchParams(location.search).get("cat");
+  const cat = data.find(c => c.slug === slug);
 
   if (!cat) {
-    itemsBox.innerHTML = `<p style="text-align:center;">Kategori bulunamadı</p>`;
+    itemsBox.innerHTML = "<p>Kategori bulunamadı</p>";
     return;
   }
 
-  if (titleEl) titleEl.textContent = getTitle(cat);
+  if (titleEl) titleEl.textContent = cat.name;
 
-  const items = cat.products || [];
   itemsBox.innerHTML = "";
 
-  for (const it of items) {
+  (cat.products || []).forEach(it => {
     const card = document.createElement("article");
     card.className = "item";
 
     const left = document.createElement("div");
     left.className = "itemMain";
     left.innerHTML = `
-      <h3 class="itemName">${normTR(it.name)}</h3>
-      ${it.description_tr ? `<p class="itemDesc">${normTR(it.description_tr)}</p>` : ""}
+      <h3 class="itemName">${it.name}</h3>
+      ${it.description_tr ? `<p class="itemDesc">${it.description_tr}</p>` : ""}
     `;
 
     const right = document.createElement("div");
@@ -146,7 +145,7 @@ function renderCategory(data) {
     card.appendChild(left);
     card.appendChild(right);
     itemsBox.appendChild(card);
-  }
+  });
 }
 
 // ===== TO TOP =====
