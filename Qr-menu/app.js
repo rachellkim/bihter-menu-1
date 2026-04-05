@@ -93,16 +93,35 @@ function renderCategory(data) {
   });
 }
 
-// ===== INIT =====
 document.addEventListener("DOMContentLoaded", async () => {
   try {
     const data = await getMenu();
-    renderCategory(data);
+
+    // Ana sayfa
+    if (document.getElementById("categoryButtons")) {
+      renderIndex(data);
+    }
+
+    // Alt kategori sayfası
+    if (document.getElementById("subButtons")) {
+      renderSub(data);
+    }
+
+    // Ürün sayfası
+    if (document.getElementById("items")) {
+      renderCategory(data);
+    }
+
   } catch (e) {
     console.error(e);
-    const box = document.getElementById("items");
+
+    const box =
+      document.getElementById("categoryButtons") ||
+      document.getElementById("subButtons") ||
+      document.getElementById("items");
+
     if (box) {
-      box.innerHTML = "<p style='color:red;text-align:center'>Yüklenemedi</p>";
+      box.innerHTML = "<p style='text-align:center;color:red;'>Yüklenemedi</p>";
     }
   }
 });
