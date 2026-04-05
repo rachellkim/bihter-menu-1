@@ -1,10 +1,6 @@
+
 // ===== CONFIG =====
-const AIRTABLE_API_KEY = "YOUR_API_KEY"; // Buraya kendi API key
-const BASE_ID = "YOUR_BASE_ID";          // Airtable Base ID
-const TABLE_NAME = "Menu";               // Tablo adı
-
-const API_URL = `https://api.airtable.com/v0/${BASE_ID}/${TABLE_NAME}`;
-
+const API_URL = "https://spring-flower-9430menu-api.zynpsude-onder.workers.dev/";
 // Ana sayfada görünecek ana kategori slug'ları (Airtable slug(text))
 const MAIN_SLUGS = [
   "tatlilar",
@@ -51,6 +47,12 @@ function getTitle(cat) {
   );
 }
 
+/**
+ * ✅ ARKAPLANLAR (BODY + KART)
+ * CSS:
+ *  - body.page-sub::before { background-image: var(--sub-bg, none); }
+ *  - .card::before { background-image: var(--card-bg-img, none); }
+ */
 function setBgsBySlug(slug) {
   const BG_MAP = {
     "soguk-kahveler": "https://static.wixstatic.com/media/b9ef37_d2f5aa4eb3c54500a2af1030b1a315b6~mv2.jpg",
@@ -67,7 +69,11 @@ function setBgsBySlug(slug) {
 
   const url = BG_MAP[slug] || fallback;
 
+  // ✅ Kart içi opak arka plan
   document.documentElement.style.setProperty("--card-bg-img", `url("${url}")`);
+
+  // ✅ Sub sayfasının blur body background’u
+  // Not: sadece page-sub’da etkili (CSS öyle)
   document.documentElement.style.setProperty("--sub-bg", `url("${url}")`);
 }
 
@@ -78,6 +84,9 @@ function formatPrice(p) {
   return s;
 }
 
+/**
+ * Ürün görseli: Worker image döndürüyor ama eski alan adlarını da destekleyelim.
+ */
 function getProductImage(it) {
   const v =
     it?.image ||
@@ -95,28 +104,10 @@ function getProductImage(it) {
   return v || "";
 }
 
-// ===== GET MENU FROM AIRTABLE =====
 async function getMenu() {
-  const r = await fetch(API_URL, {
-    headers: {
-      "Authorization": `Bearer ${AIRTABLE_API_KEY}`,
-      "Content-Type": "application/json"
-    },
-    cache: "no-store"
-  });
-
+  const r = await fetch(API_URL, { cache: "no-store" });
   if (!r.ok) throw new Error("Menu API hata: " + r.status);
-
-  const data = await r.json();
-
-  // Airtable records → categories
-  return {
-    categories: data.records.map(rec => ({
-      ...rec.fields,
-      slug: rec.fields.slug,
-      items: rec.fields.items || []
-    }))
-  };
+  return await r.json();
 }
 
 function findCategory(data, slug) {
@@ -125,6 +116,7 @@ function findCategory(data, slug) {
 }
 
 function sortItemsSafe(items) {
+  // Worker artık Sira’ya göre gönderiyor ama güvenlik için:
   return [...(items || [])].sort((a, b) => {
     const ax = Number(a?.Sira ?? a?.["Sira"] ?? a?.["Sıra"] ?? a?.order ?? a?.Order ?? 999999);
     const bx = Number(b?.Sira ?? b?.["Sira"] ?? b?.["Sıra"] ?? b?.order ?? b?.Order ?? 999999);
@@ -132,7 +124,7 @@ function sortItemsSafe(items) {
   });
 }
 
-// ===== RENDER FUNCTIONS =====
+// ===== RENDER: MAIN INDEX =====
 function renderIndex(data) {
   const box = document.getElementById("categoryButtons");
   if (!box) return;
@@ -159,6 +151,7 @@ function renderIndex(data) {
   }
 }
 
+// ===== RENDER: SUB PAGE =====
 function renderSub(data) {
   const box = document.getElementById("subButtons");
   const titleEl = document.getElementById("subTitle");
@@ -172,7 +165,10 @@ function renderSub(data) {
     return;
   }
 
+  // ✅ Başlık
   if (titleEl) titleEl.textContent = getTitle(mainCat);
+
+  // ✅ Hem body blur bg hem kart içi bg
   setBgsBySlug(mainSlug);
 
   const subs = SUB_MAP[mainSlug] || [];
@@ -195,6 +191,7 @@ function renderSub(data) {
   }
 }
 
+// ===== RENDER: CATEGORY PAGE (PRODUCTS) =====
 function renderCategory(data) {
   const itemsBox = document.getElementById("items");
   const titleEl = document.getElementById("catTitle");
@@ -208,9 +205,14 @@ function renderCategory(data) {
     return;
   }
 
+  // başlık
   if (titleEl) titleEl.textContent = normTR(getTitle(cat));
+
+  // ✅ Kategori sayfası kart içi bg
+  // (slug bir main slug ise direkt map'ten bulur; değilse fallback)
   setBgsBySlug(slug);
 
+  // ürünler
   const items = sortItemsSafe(cat?.items || []);
   itemsBox.innerHTML = "";
 
