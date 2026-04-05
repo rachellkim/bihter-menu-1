@@ -1,0 +1,15 @@
+{
+  "categories": [
+    {
+      "slug": "tatlilar",
+      "titleTR": "Tatlılar",
+      "items": [
+        {
+          "name": "Deneme Ürün",
+          "desc": "Test açıklama",
+          "price": "100"
+        }
+      ]
+    }
+  ]
+}
