@@ -1,4 +1,3 @@
-```javascript
 // ===== CONFIG =====
 const API_URL = "https://raw.githubusercontent.com/rachellkim/menu-json/main/menu.json";
 
@@ -62,7 +61,6 @@ function renderCategory(data) {
     const name = document.createElement("h3");
     name.className = "itemName";
     name.textContent = normTR(it.name);
-
     left.appendChild(name);
 
     if (it.description_tr) {
@@ -108,4 +106,3 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 });
-```
