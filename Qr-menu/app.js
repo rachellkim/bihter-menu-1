@@ -1,4 +1,4 @@
-
+// ===== CONFIG =====
 const API_URL = "https://raw.githubusercontent.com/rachellkim/menu-json/main/menu.json";
 
 const MAIN_SLUGS = [
@@ -22,7 +22,7 @@ const SUB_MAP = {
 
 // ===== HELPERS =====
 const qs = (k) => new URLSearchParams(location.search).get(k) || "";
-const normTR = (s) => String(s ?? "").trim();
+const norm = (s) => String(s ?? "").trim().toLowerCase();
 
 // ===== FETCH =====
 async function getMenu() {
@@ -32,6 +32,73 @@ async function getMenu() {
   return json.categories || [];
 }
 
+// ===== INDEX =====
+function renderIndex(data) {
+  const box = document.getElementById("categoryButtons");
+  if (!box) return;
+
+  const catsBySlug = new Map(
+    data.map((c) => [norm(c.slug), c])
+  );
+
+  box.innerHTML = "";
+
+  for (const slug of MAIN_SLUGS) {
+    const cat = catsBySlug.get(norm(slug));
+
+    if (!cat) {
+      console.warn("Kategori bulunamadı:", slug);
+      continue;
+    }
+
+    const hasSubs = SUB_MAP[slug]?.length > 0;
+
+    const href = hasSubs
+      ? `/sub.html?main=${slug}`
+      : `/category/?cat=${slug}`;
+
+    const a = document.createElement("a");
+    a.className = "btn";
+    a.href = href;
+    a.textContent = cat.name;
+
+    box.appendChild(a);
+  }
+}
+
+// ===== SUB PAGE =====
+function renderSub(data) {
+  const box = document.getElementById("subButtons");
+  const titleEl = document.getElementById("subTitle");
+  if (!box) return;
+
+  const mainSlug = qs("main");
+  const mainCat = data.find((c) => norm(c.slug) === norm(mainSlug));
+
+  if (!mainCat) return;
+
+  if (titleEl) titleEl.textContent = mainCat.name;
+
+  const subs = SUB_MAP[mainSlug] || [];
+  box.innerHTML = "";
+
+  if (!subs.length) {
+    location.href = `/category/?cat=${mainSlug}`;
+    return;
+  }
+
+  for (const subSlug of subs) {
+    const cat = data.find((c) => norm(c.slug) === norm(subSlug));
+
+    const a = document.createElement("a");
+    a.className = "btn";
+    a.href = `/category/?cat=${subSlug}`;
+    a.textContent = cat ? cat.name : subSlug;
+
+    box.appendChild(a);
+  }
+}
+
 // ===== CATEGORY =====
 function renderCategory(data) {
   const itemsBox = document.getElementById("items");
@@ -39,7 +106,7 @@ function renderCategory(data) {
   if (!itemsBox) return;
 
   const slug = qs("cat");
-  const cat = data.find(c => c.slug === slug);
+  const cat = data.find((c) => norm(c.slug) === norm(slug));
 
   if (!cat) {
     itemsBox.innerHTML = "<p>Kategori bulunamadı</p>";
@@ -51,7 +118,6 @@ function renderCategory(data) {
   itemsBox.innerHTML = "";
 
   (cat.products || []).forEach(it => {
-
     const card = document.createElement("article");
     card.className = "item";
 
@@ -60,13 +126,13 @@ function renderCategory(data) {
 
     const name = document.createElement("h3");
     name.className = "itemName";
-    name.textContent = normTR(it.name);
+    name.textContent = it.name;
     left.appendChild(name);
 
     if (it.description_tr) {
       const desc = document.createElement("p");
       desc.className = "itemDesc";
-      desc.textContent = normTR(it.description_tr);
+      desc.textContent = it.description_tr;
       left.appendChild(desc);
     }
 
@@ -93,21 +159,37 @@ function renderCategory(data) {
   });
 }
 
+// ===== TO TOP =====
+function setupToTop() {
+  const btn = document.getElementById("toTopBtn");
+  if (!btn) return;
+
+  btn.addEventListener("click", () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+
+  window.addEventListener("scroll", () => {
+    btn.style.display = window.scrollY > 400 ? "block" : "none";
+  });
+
+  btn.style.display = "none";
+}
+
+// ===== INIT =====
 document.addEventListener("DOMContentLoaded", async () => {
   try {
+    setupToTop();
+
     const data = await getMenu();
 
-    // Ana sayfa
     if (document.getElementById("categoryButtons")) {
       renderIndex(data);
     }
 
-    // Alt kategori sayfası
     if (document.getElementById("subButtons")) {
       renderSub(data);
     }
 
-    // Ürün sayfası
     if (document.getElementById("items")) {
       renderCategory(data);
     }
@@ -121,7 +203,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       document.getElementById("items");
 
     if (box) {
-      box.innerHTML = "<p style='text-align:center;color:red;'>Yüklenemedi</p>";
+      box.innerHTML = "<p style='color:red;text-align:center'>Yüklenemedi</p>";
     }
   }
 });
