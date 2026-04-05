@@ -1,4 +1,4 @@
-// ===== CONFIG =====
+
 const API_URL = "https://raw.githubusercontent.com/rachellkim/menu-json/main/menu.json";
 
 const MAIN_SLUGS = [
