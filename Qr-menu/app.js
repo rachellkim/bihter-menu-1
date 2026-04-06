@@ -198,3 +198,39 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 });
+
+function renderCategory(data) {
+  const itemsBox = document.getElementById("items");
+  const titleEl = document.getElementById("catTitle");
+  if (!itemsBox) return;
+
+  const slug = qs("cat");
+  const cat = data.find(c => norm(c.slug) === norm(slug));
+
+  if (!cat) {
+    itemsBox.innerHTML = "<p>Kategori bulunamadı</p>";
+    return;
+  }
+
+  if (titleEl) titleEl.textContent = cat.name;
+
+  itemsBox.innerHTML = "";
+
+  (cat.products || []).forEach(it => {
+    const card = document.createElement("article");
+    card.className = "item";
+
+    card.innerHTML = `
+      <div class="itemMain">
+        <h3 class="itemName">${it.name}</h3>
+        ${it.description_tr ? `<p class="itemDesc">${it.description_tr}</p>` : ""}
+      </div>
+      <div class="itemRight">
+        <div class="price">${it.price_display || ""}</div>
+        ${it.image ? `<img class="thumb" src="${it.image}" />` : ""}
+      </div>
+    `;
+
+    itemsBox.appendChild(card);
+  });
+}
