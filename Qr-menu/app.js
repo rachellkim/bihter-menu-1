@@ -22,20 +22,31 @@ async function getMenu() {
   return json.categories || [];
 }
 
-// ===== INDEX (OTOMATİK) =====
+// ===== INDEX (FİLTRELİ ANA KATEGORİ) =====
 function renderIndex(data) {
   const box = document.getElementById("categoryButtons");
   if (!box) return;
 
+  const MAIN_CATEGORIES = [
+    "tatlilar",
+    "soguk-kahveler",
+    "sicak-kahveler",
+    "soguk-icecekler",
+    "sicak-icecekler",
+    "atistirmaliklar",
+    "sicak-matcha"
+  ];
+
   box.innerHTML = "";
 
   data.forEach(cat => {
-    const slug = cat.slug;
-    const hasSubs = SUB_MAP[slug]?.length > 0;
+    if (!MAIN_CATEGORIES.includes(cat.slug)) return;
+
+    const hasSubs = SUB_MAP[cat.slug]?.length > 0;
 
     const href = hasSubs
-      ? `/sub.html?main=${slug}`
-      : `/category/?cat=${slug}`;
+      ? `/sub.html?main=${cat.slug}`
+      : `/category/?cat=${cat.slug}`;
 
     const a = document.createElement("a");
     a.className = "btn";
@@ -79,39 +90,63 @@ function renderSub(data) {
   });
 }
 
-// ===== CATEGORY =====
-function renderIndex(data) {
-  const box = document.getElementById("categoryButtons");
-  if (!box) return;
+// ===== CATEGORY PAGE =====
+function renderCategory(data) {
+  const itemsBox = document.getElementById("items");
+  const titleEl = document.getElementById("catTitle");
+  if (!itemsBox) return;
 
-  // SADECE ANA KATEGORİLER
-  const MAIN_CATEGORIES = [
-    "tatlilar",
-    "soguk-kahveler",
-    "sicak-kahveler",
-    "soguk-icecekler",
-    "sicak-icecekler",
-    "atistirmaliklar",
-    "sicak-matcha"
-  ];
+  const slug = qs("cat");
+  const cat = data.find(c => norm(c.slug) === norm(slug));
 
-  box.innerHTML = "";
+  if (!cat) {
+    itemsBox.innerHTML = "<p>Kategori bulunamadı</p>";
+    return;
+  }
 
-  data.forEach(cat => {
-    if (!MAIN_CATEGORIES.includes(cat.slug)) return;
+  if (titleEl) titleEl.textContent = cat.name;
 
-    const hasSubs = SUB_MAP[cat.slug]?.length > 0;
+  itemsBox.innerHTML = "";
 
-    const href = hasSubs
-      ? `/sub.html?main=${cat.slug}`
-      : `/category/?cat=${cat.slug}`;
+  (cat.products || []).forEach(it => {
+    const card = document.createElement("article");
+    card.className = "item";
 
-    const a = document.createElement("a");
-    a.className = "btn";
-    a.href = href;
-    a.textContent = cat.name;
+    const left = document.createElement("div");
+    left.className = "itemMain";
 
-    box.appendChild(a);
+    const name = document.createElement("h3");
+    name.className = "itemName";
+    name.textContent = it.name;
+    left.appendChild(name);
+
+    if (it.description_tr) {
+      const desc = document.createElement("p");
+      desc.className = "itemDesc";
+      desc.textContent = it.description_tr;
+      left.appendChild(desc);
+    }
+
+    const right = document.createElement("div");
+    right.className = "itemRight";
+
+    const price = document.createElement("div");
+    price.className = "price";
+    price.textContent = it.price_display || "";
+    right.appendChild(price);
+
+    if (it.image) {
+      const img = document.createElement("img");
+      img.className = "thumb";
+      img.src = it.image;
+      img.alt = it.name;
+      img.loading = "lazy";
+      right.appendChild(img);
+    }
+
+    card.appendChild(left);
+    card.appendChild(right);
+    itemsBox.appendChild(card);
   });
 }
 
@@ -138,9 +173,17 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const data = await getMenu();
 
-    renderIndex(data);
-    renderSub(data);
-    renderCategory(data);
+    if (document.getElementById("categoryButtons")) {
+      renderIndex(data);
+    }
+
+    if (document.getElementById("subButtons")) {
+      renderSub(data);
+    }
+
+    if (document.getElementById("items")) {
+      renderCategory(data);
+    }
 
   } catch (e) {
     console.error(e);
