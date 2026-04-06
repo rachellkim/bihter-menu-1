@@ -1,8 +1,6 @@
-
-
+// ===== CONFIG =====
 const API_URL = "https://raw.githubusercontent.com/rachellkim/menu-json/main/menu.json";
 
-// Ana sayfada görünecek ana kategori slug'ları (Airtable slug(text))
 const MAIN_SLUGS = [
   "tatlilar",
   "soguk-kahveler",
@@ -13,10 +11,6 @@ const MAIN_SLUGS = [
   "sicak-matcha",
 ];
 
-/**
- * ANA -> ALT kategori eşlemesi (Airtable slug'larıyla)
- * Alt kategorisi olmayanlarda [] bırak.
- */
 const SUB_MAP = {
   "atistirmaliklar": [],
   "sicak-kahveler": ["espresso-bazli", "aromali-ozel-kahveler", "filtreturk", "sicak-matcha"],
@@ -29,280 +23,82 @@ const SUB_MAP = {
 // ===== HELPERS =====
 const qs = (k) => new URLSearchParams(location.search).get(k) || "";
 
-function normTR(s) {
-  return String(s ?? "").trim();
-}
+const norm = (s) => String(s ?? "").trim().toLowerCase();
 
-function getSlug(cat) {
-  return cat?.slug || cat?.slugText || cat?.["slug(text)"] || cat?.["slug"] || "";
-}
-
-function getTitle(cat) {
-  return (
-    cat?.titleTR ||
-    cat?.["Kategori TR"] ||
-    cat?.title ||
-    cat?.name ||
-    getSlug(cat) ||
-    ""
-  );
-}
-
-/**
- * ✅ ARKAPLANLAR (BODY + KART)
- * CSS:
- *  - body.page-sub::before { background-image: var(--sub-bg, none); }
- *  - .card::before { background-image: var(--card-bg-img, none); }
- */
-function setBgsBySlug(slug) {
-  const BG_MAP = {
-    "soguk-kahveler": "https://static.wixstatic.com/media/b9ef37_d2f5aa4eb3c54500a2af1030b1a315b6~mv2.jpg",
-    "sicak-kahveler": "https://static.wixstatic.com/media/b9ef37_d2f5aa4eb3c54500a2af1030b1a315b6~mv2.jpg",
-    "sicak-icecekler": "https://static.wixstatic.com/media/b9ef37_d2f5aa4eb3c54500a2af1030b1a315b6~mv2.jpg",
-    "soguk-icecekler": "https://static.wixstatic.com/media/b9ef37_d2f5aa4eb3c54500a2af1030b1a315b6~mv2.jpg",
-    "tatlilar": "https://static.wixstatic.com/media/b9ef37_d2f5aa4eb3c54500a2af1030b1a315b6~mv2.jpg",
-    "atistirmaliklar": "https://static.wixstatic.com/media/b9ef37_d2f5aa4eb3c54500a2af1030b1a315b6~mv2.jpg",
-    "sicak-matcha": "https://static.wixstatic.com/media/b9ef37_d2f5aa4eb3c54500a2af1030b1a315b6~mv2.jpg",
-  };
-
-  const fallback =
-    "https://static.wixstatic.com/media/b9ef37_d2f5aa4eb3c54500a2af1030b1a315b6~mv2.jpg";
-
-  const url = BG_MAP[slug] || fallback;
-
-  // ✅ Kart içi opak arka plan
-  document.documentElement.style.setProperty("--card-bg-img", `url("${url}")`);
-
-  // ✅ Sub sayfasının blur body background’u
-  // Not: sadece page-sub’da etkili (CSS öyle)
-  document.documentElement.style.setProperty("--sub-bg", `url("${url}")`);
-}
-
-function formatPrice(p) {
-  const s = String(p ?? "").trim();
-  if (!s) return "";
-  if (/^\d+([.,]\d+)?$/.test(s)) return s.replace(",", ".") + "₺";
-  return s;
-}
-
-/**
- * Ürün görseli: Worker image döndürüyor ama eski alan adlarını da destekleyelim.
- */
-function getProductImage(it) {
-  const v =
-    it?.image ||
-    it?.photoUrl ||
-    it?.imageUrl ||
-    it?.imgUrl ||
-    it?.photo ||
-    it?.["Ürün Fotoğrafı"] ||
-    it?.["Urun Fotograf"] ||
-    it?.urunFotografi ||
-    "";
-
-  if (Array.isArray(v)) return v?.[0]?.url || "";
-  if (typeof v === "object" && v) return v?.url || "";
-  return v || "";
-}
-
+// ===== FETCH =====
 async function getMenu() {
-  const r = await fetch(API_URL, { cache: "no-store" });
-  if (!r.ok) throw new Error("Menu API hata: " + r.status);
-  return await r.json();
+  const res = await fetch(API_URL, { cache: "no-store" });
+  if (!res.ok) throw new Error("Menu fetch error: " + res.status);
+  const json = await res.json();
+  return json.categories || [];
 }
 
-function findCategory(data, slug) {
-  const cats = data?.categories || [];
-  return cats.find((c) => getSlug(c) === slug) || null;
-}
-
-function sortItemsSafe(items) {
-  // Worker artık Sira’ya göre gönderiyor ama güvenlik için:
-  return [...(items || [])].sort((a, b) => {
-    const ax = Number(a?.Sira ?? a?.["Sira"] ?? a?.["Sıra"] ?? a?.order ?? a?.Order ?? 999999);
-    const bx = Number(b?.Sira ?? b?.["Sira"] ?? b?.["Sıra"] ?? b?.order ?? b?.Order ?? 999999);
-    return ax - bx;
-  });
-}
-
-// ===== RENDER: MAIN INDEX =====
+// ===== INDEX =====
 function renderIndex(data) {
   const box = document.getElementById("categoryButtons");
   if (!box) return;
 
-  const catsBySlug = new Map((data?.categories || []).map((c) => [getSlug(c), c]));
-
   box.innerHTML = "";
-  for (const slug of MAIN_SLUGS) {
-    const cat = catsBySlug.get(slug);
-    if (!cat) continue;
 
-    const title = getTitle(cat);
-    const hasSubs = Array.isArray(SUB_MAP[slug]) && SUB_MAP[slug].length > 0;
+  data.forEach(cat => {
+    if (!MAIN_SLUGS.includes(cat.slug)) return;
+
+    const hasSubs = SUB_MAP[cat.slug]?.length > 0;
 
     const href = hasSubs
-      ? `/sub.html?main=${encodeURIComponent(slug)}`
-      : `/category/?cat=${encodeURIComponent(slug)}`;
+      ? `/sub.html?main=${cat.slug}`
+      : `/category/?cat=${cat.slug}`;
 
     const a = document.createElement("a");
     a.className = "btn";
     a.href = href;
-    a.textContent = title;
+    a.textContent = cat.name;
+
     box.appendChild(a);
-  }
+  });
 }
 
-// ===== RENDER: SUB PAGE =====
+// ===== SUB PAGE =====
 function renderSub(data) {
   const box = document.getElementById("subButtons");
   const titleEl = document.getElementById("subTitle");
   if (!box) return;
 
   const mainSlug = qs("main");
-  const mainCat = findCategory(data, mainSlug);
+  const mainCat = data.find(c => norm(c.slug) === norm(mainSlug));
 
-  if (!mainCat) {
-    box.innerHTML = `<p style="text-align:center; opacity:.7;">Kategori bulunamadı.</p>`;
-    return;
-  }
+  if (!mainCat) return;
 
-  // ✅ Başlık
-  if (titleEl) titleEl.textContent = getTitle(mainCat);
-
-  // ✅ Hem body blur bg hem kart içi bg
-  setBgsBySlug(mainSlug);
+  if (titleEl) titleEl.textContent = mainCat.name;
 
   const subs = SUB_MAP[mainSlug] || [];
   box.innerHTML = "";
 
   if (!subs.length) {
-    location.href = `/category/?cat=${encodeURIComponent(mainSlug)}`;
+    location.href = `/category/?cat=${mainSlug}`;
     return;
   }
 
-  for (const subSlug of subs) {
-    const cat = findCategory(data, subSlug);
-    const title = cat ? getTitle(cat) : subSlug;
+  subs.forEach(subSlug => {
+    const cat = data.find(c => norm(c.slug) === norm(subSlug));
 
     const a = document.createElement("a");
     a.className = "btn";
-    a.href = `/category/?cat=${encodeURIComponent(subSlug)}`;
-    a.textContent = title;
+    a.href = `/category/?cat=${subSlug}`;
+    a.textContent = cat ? cat.name : subSlug;
+
     box.appendChild(a);
-  }
+  });
 }
 
-// ===== RENDER: CATEGORY PAGE (PRODUCTS) =====
+// ===== CATEGORY =====
 function renderCategory(data) {
   const itemsBox = document.getElementById("items");
   const titleEl = document.getElementById("catTitle");
   if (!itemsBox) return;
 
   const slug = qs("cat");
-  const cat = findCategory(data, slug);
-
-  if (!cat) {
-    itemsBox.innerHTML = `<p style="text-align:center; opacity:.7;">Kategori bulunamadı.</p>`;
-    return;
-  }
-
-  // başlık
-  if (titleEl) titleEl.textContent = normTR(getTitle(cat));
-
-  // ✅ Kategori sayfası kart içi bg
-  // (slug bir main slug ise direkt map'ten bulur; değilse fallback)
-  setBgsBySlug(slug);
-
-  // ürünler
-  const items = sortItemsSafe(cat?.items || []);
-  itemsBox.innerHTML = "";
-
-  for (const it of items) {
-    const name = normTR(it?.name || it?.["Ürün Adı"] || it?.["Urun Adi"] || "");
-    const desc = normTR(it?.desc || it?.descTR || it?.["Açıklama TR"] || it?.["Aciklama TR"] || "");
-    const price = formatPrice(it?.price || it?.priceText || it?.["Fiyat"] || it?.["Price"] || "");
-    const imgUrl = getProductImage(it);
-
-    const card = document.createElement("article");
-    card.className = "item";
-
-    const left = document.createElement("div");
-    left.className = "itemMain";
-    left.innerHTML = `
-      <h3 class="itemName">${name}</h3>
-      ${desc ? `<p class="itemDesc">${desc}</p>` : ""}
-    `;
-
-    const right = document.createElement("div");
-    right.className = "itemRight";
-
-    const p = document.createElement("div");
-    p.className = "price";
-    p.textContent = price;
-    right.appendChild(p);
-
-    if (imgUrl) {
-      const img = document.createElement("img");
-      img.className = "thumb";
-      img.alt = name;
-      img.loading = "lazy";
-      img.src = imgUrl;
-      right.appendChild(img);
-    }
-
-    card.appendChild(left);
-    card.appendChild(right);
-    itemsBox.appendChild(card);
-  }
-}
-
-// ===== TO TOP =====
-function setupToTop() {
-  const btn = document.getElementById("toTopBtn");
-  if (!btn) return;
-
-  btn.addEventListener("click", () =>
-    window.scrollTo({ top: 0, behavior: "smooth" })
-  );
-
-  window.addEventListener(
-    "scroll",
-    () => {
-      btn.style.display = window.scrollY > 400 ? "block" : "none";
-    },
-    { passive: true }
-  );
-
-  btn.style.display = "none";
-}
-
-// ===== BOOT =====
-(async function init() {
-  try {
-    setupToTop();
-    const data = await getMenu();
-
-    renderIndex(data);
-    renderSub(data);
-    renderCategory(data);
-  } catch (e) {
-    console.error(e);
-    const box =
-      document.getElementById("categoryButtons") ||
-      document.getElementById("subButtons") ||
-      document.getElementById("items");
-    if (box) {
-      box.innerHTML = `<p style="text-align:center; color:#a00;">Yüklenemedi. (API / veri hatası)</p>`;
-    }
-  }
-})();
-function renderCategory(data) {
-  const itemsBox = document.getElementById("items");
-  const titleEl = document.getElementById("catTitle");
-  if (!itemsBox) return;
-
-  const slug = qs("cat");
-  const cat = data.categories.find(c => c.slug === slug);
+  const cat = data.find(c => norm(c.slug) === norm(slug));
 
   if (!cat) {
     itemsBox.innerHTML = "<p>Kategori bulunamadı</p>";
@@ -317,17 +113,83 @@ function renderCategory(data) {
     const card = document.createElement("article");
     card.className = "item";
 
-    card.innerHTML = `
-      <div class="itemMain">
-        <h3>${it.name}</h3>
-        ${it.description_tr ? `<p>${it.description_tr}</p>` : ""}
-      </div>
-      <div class="itemRight">
-        <strong>${it.price_display || ""}</strong>
-        ${it.image ? `<img src="${it.image}" width="120">` : ""}
-      </div>
+    const left = document.createElement("div");
+    left.className = "itemMain";
+
+    left.innerHTML = `
+      <h3 class="itemName">${it.name}</h3>
+      ${it.description_tr ? `<p class="itemDesc">${it.description_tr}</p>` : ""}
     `;
 
+    const right = document.createElement("div");
+    right.className = "itemRight";
+
+    const price = document.createElement("div");
+    price.className = "price";
+    price.textContent = it.price_display || "";
+
+    right.appendChild(price);
+
+    if (it.image) {
+      const img = document.createElement("img");
+      img.className = "thumb";
+      img.src = it.image;
+      img.alt = it.name;
+      img.loading = "lazy";
+      right.appendChild(img);
+    }
+
+    card.appendChild(left);
+    card.appendChild(right);
     itemsBox.appendChild(card);
   });
 }
+
+// ===== TO TOP =====
+function setupToTop() {
+  const btn = document.getElementById("toTopBtn");
+  if (!btn) return;
+
+  btn.addEventListener("click", () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+
+  window.addEventListener("scroll", () => {
+    btn.style.display = window.scrollY > 400 ? "block" : "none";
+  });
+
+  btn.style.display = "none";
+}
+
+// ===== INIT =====
+document.addEventListener("DOMContentLoaded", async () => {
+  try {
+    setupToTop();
+
+    const data = await getMenu();
+
+    if (document.getElementById("categoryButtons")) {
+      renderIndex(data);
+    }
+
+    if (document.getElementById("subButtons")) {
+      renderSub(data);
+    }
+
+    if (document.getElementById("items")) {
+      renderCategory(data);
+    }
+
+  } catch (e) {
+    console.error(e);
+
+    const box =
+      document.getElementById("categoryButtons") ||
+      document.getElementById("subButtons") ||
+      document.getElementById("items");
+
+    if (box) {
+      box.innerHTML = "<p style='color:red;text-align:center'>Yüklenemedi</p>";
+    }
+  }
+});
