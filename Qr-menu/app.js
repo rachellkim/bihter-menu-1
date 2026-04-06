@@ -296,3 +296,38 @@ function setupToTop() {
     }
   }
 })();
+function renderCategory(data) {
+  const itemsBox = document.getElementById("items");
+  const titleEl = document.getElementById("catTitle");
+  if (!itemsBox) return;
+
+  const slug = qs("cat");
+  const cat = data.categories.find(c => c.slug === slug);
+
+  if (!cat) {
+    itemsBox.innerHTML = "<p>Kategori bulunamadı</p>";
+    return;
+  }
+
+  if (titleEl) titleEl.textContent = cat.name;
+
+  itemsBox.innerHTML = "";
+
+  (cat.products || []).forEach(it => {
+    const card = document.createElement("article");
+    card.className = "item";
+
+    card.innerHTML = `
+      <div class="itemMain">
+        <h3>${it.name}</h3>
+        ${it.description_tr ? `<p>${it.description_tr}</p>` : ""}
+      </div>
+      <div class="itemRight">
+        <strong>${it.price_display || ""}</strong>
+        ${it.image ? `<img src="${it.image}" width="120">` : ""}
+      </div>
+    `;
+
+    itemsBox.appendChild(card);
+  });
+}
