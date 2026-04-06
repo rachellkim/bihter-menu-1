@@ -1,6 +1,22 @@
-// ===== CONFIG =====
+
+
 const API_URL = "https://raw.githubusercontent.com/rachellkim/menu-json/main/menu.json";
 
+// Ana sayfada görünecek ana kategori slug'ları (Airtable slug(text))
+const MAIN_SLUGS = [
+  "tatlilar",
+  "soguk-kahveler",
+  "sicak-icecekler",
+  "sicak-kahveler",
+  "soguk-icecekler",
+  "atistirmaliklar",
+  "sicak-matcha",
+];
+
+/**
+ * ANA -> ALT kategori eşlemesi (Airtable slug'larıyla)
+ * Alt kategorisi olmayanlarda [] bırak.
+ */
 const SUB_MAP = {
   "atistirmaliklar": [],
   "sicak-kahveler": ["espresso-bazli", "aromali-ozel-kahveler", "filtreturk", "sicak-matcha"],
@@ -12,142 +28,232 @@ const SUB_MAP = {
 
 // ===== HELPERS =====
 const qs = (k) => new URLSearchParams(location.search).get(k) || "";
-const norm = (s) => String(s ?? "").trim().toLowerCase();
 
-// ===== FETCH =====
-async function getMenu() {
-  const res = await fetch(API_URL, { cache: "no-store" });
-  if (!res.ok) throw new Error("Menu fetch error: " + res.status);
-  const json = await res.json();
-  return json.categories || [];
+function normTR(s) {
+  return String(s ?? "").trim();
 }
 
-// ===== INDEX (FİLTRELİ ANA KATEGORİ) =====
+function getSlug(cat) {
+  return cat?.slug || cat?.slugText || cat?.["slug(text)"] || cat?.["slug"] || "";
+}
+
+function getTitle(cat) {
+  return (
+    cat?.titleTR ||
+    cat?.["Kategori TR"] ||
+    cat?.title ||
+    cat?.name ||
+    getSlug(cat) ||
+    ""
+  );
+}
+
+/**
+ * ✅ ARKAPLANLAR (BODY + KART)
+ * CSS:
+ *  - body.page-sub::before { background-image: var(--sub-bg, none); }
+ *  - .card::before { background-image: var(--card-bg-img, none); }
+ */
+function setBgsBySlug(slug) {
+  const BG_MAP = {
+    "soguk-kahveler": "https://static.wixstatic.com/media/b9ef37_d2f5aa4eb3c54500a2af1030b1a315b6~mv2.jpg",
+    "sicak-kahveler": "https://static.wixstatic.com/media/b9ef37_d2f5aa4eb3c54500a2af1030b1a315b6~mv2.jpg",
+    "sicak-icecekler": "https://static.wixstatic.com/media/b9ef37_d2f5aa4eb3c54500a2af1030b1a315b6~mv2.jpg",
+    "soguk-icecekler": "https://static.wixstatic.com/media/b9ef37_d2f5aa4eb3c54500a2af1030b1a315b6~mv2.jpg",
+    "tatlilar": "https://static.wixstatic.com/media/b9ef37_d2f5aa4eb3c54500a2af1030b1a315b6~mv2.jpg",
+    "atistirmaliklar": "https://static.wixstatic.com/media/b9ef37_d2f5aa4eb3c54500a2af1030b1a315b6~mv2.jpg",
+    "sicak-matcha": "https://static.wixstatic.com/media/b9ef37_d2f5aa4eb3c54500a2af1030b1a315b6~mv2.jpg",
+  };
+
+  const fallback =
+    "https://static.wixstatic.com/media/b9ef37_d2f5aa4eb3c54500a2af1030b1a315b6~mv2.jpg";
+
+  const url = BG_MAP[slug] || fallback;
+
+  // ✅ Kart içi opak arka plan
+  document.documentElement.style.setProperty("--card-bg-img", `url("${url}")`);
+
+  // ✅ Sub sayfasının blur body background’u
+  // Not: sadece page-sub’da etkili (CSS öyle)
+  document.documentElement.style.setProperty("--sub-bg", `url("${url}")`);
+}
+
+function formatPrice(p) {
+  const s = String(p ?? "").trim();
+  if (!s) return "";
+  if (/^\d+([.,]\d+)?$/.test(s)) return s.replace(",", ".") + "₺";
+  return s;
+}
+
+/**
+ * Ürün görseli: Worker image döndürüyor ama eski alan adlarını da destekleyelim.
+ */
+function getProductImage(it) {
+  const v =
+    it?.image ||
+    it?.photoUrl ||
+    it?.imageUrl ||
+    it?.imgUrl ||
+    it?.photo ||
+    it?.["Ürün Fotoğrafı"] ||
+    it?.["Urun Fotograf"] ||
+    it?.urunFotografi ||
+    "";
+
+  if (Array.isArray(v)) return v?.[0]?.url || "";
+  if (typeof v === "object" && v) return v?.url || "";
+  return v || "";
+}
+
+async function getMenu() {
+  const r = await fetch(API_URL, { cache: "no-store" });
+  if (!r.ok) throw new Error("Menu API hata: " + r.status);
+  return await r.json();
+}
+
+function findCategory(data, slug) {
+  const cats = data?.categories || [];
+  return cats.find((c) => getSlug(c) === slug) || null;
+}
+
+function sortItemsSafe(items) {
+  // Worker artık Sira’ya göre gönderiyor ama güvenlik için:
+  return [...(items || [])].sort((a, b) => {
+    const ax = Number(a?.Sira ?? a?.["Sira"] ?? a?.["Sıra"] ?? a?.order ?? a?.Order ?? 999999);
+    const bx = Number(b?.Sira ?? b?.["Sira"] ?? b?.["Sıra"] ?? b?.order ?? b?.Order ?? 999999);
+    return ax - bx;
+  });
+}
+
+// ===== RENDER: MAIN INDEX =====
 function renderIndex(data) {
   const box = document.getElementById("categoryButtons");
   if (!box) return;
 
-  const MAIN_CATEGORIES = [
-    "tatlilar",
-    "soguk-kahveler",
-    "sicak-kahveler",
-    "soguk-icecekler",
-    "sicak-icecekler",
-    "atistirmaliklar",
-    "sicak-matcha"
-  ];
+  const catsBySlug = new Map((data?.categories || []).map((c) => [getSlug(c), c]));
 
   box.innerHTML = "";
+  for (const slug of MAIN_SLUGS) {
+    const cat = catsBySlug.get(slug);
+    if (!cat) continue;
 
-  data.forEach(cat => {
-    if (!MAIN_CATEGORIES.includes(cat.slug)) return;
-
-    const hasSubs = SUB_MAP[cat.slug]?.length > 0;
+    const title = getTitle(cat);
+    const hasSubs = Array.isArray(SUB_MAP[slug]) && SUB_MAP[slug].length > 0;
 
     const href = hasSubs
-      ? `/sub.html?main=${cat.slug}`
-      : `/category/?cat=${cat.slug}`;
+      ? `/sub.html?main=${encodeURIComponent(slug)}`
+      : `/category/?cat=${encodeURIComponent(slug)}`;
 
     const a = document.createElement("a");
     a.className = "btn";
     a.href = href;
-    a.textContent = cat.name;
-
+    a.textContent = title;
     box.appendChild(a);
-  });
+  }
 }
 
-// ===== SUB PAGE =====
+// ===== RENDER: SUB PAGE =====
 function renderSub(data) {
   const box = document.getElementById("subButtons");
   const titleEl = document.getElementById("subTitle");
   if (!box) return;
 
   const mainSlug = qs("main");
-  const mainCat = data.find(c => norm(c.slug) === norm(mainSlug));
+  const mainCat = findCategory(data, mainSlug);
 
-  if (!mainCat) return;
+  if (!mainCat) {
+    box.innerHTML = `<p style="text-align:center; opacity:.7;">Kategori bulunamadı.</p>`;
+    return;
+  }
 
-  if (titleEl) titleEl.textContent = mainCat.name;
+  // ✅ Başlık
+  if (titleEl) titleEl.textContent = getTitle(mainCat);
+
+  // ✅ Hem body blur bg hem kart içi bg
+  setBgsBySlug(mainSlug);
 
   const subs = SUB_MAP[mainSlug] || [];
   box.innerHTML = "";
 
   if (!subs.length) {
-    location.href = `/category/?cat=${mainSlug}`;
+    location.href = `/category/?cat=${encodeURIComponent(mainSlug)}`;
     return;
   }
 
-  subs.forEach(subSlug => {
-    const cat = data.find(c => norm(c.slug) === norm(subSlug));
+  for (const subSlug of subs) {
+    const cat = findCategory(data, subSlug);
+    const title = cat ? getTitle(cat) : subSlug;
 
     const a = document.createElement("a");
     a.className = "btn";
-    a.href = `/category/?cat=${subSlug}`;
-    a.textContent = cat ? cat.name : subSlug;
-
+    a.href = `/category/?cat=${encodeURIComponent(subSlug)}`;
+    a.textContent = title;
     box.appendChild(a);
-  });
+  }
 }
 
-// ===== CATEGORY PAGE =====
+// ===== RENDER: CATEGORY PAGE (PRODUCTS) =====
 function renderCategory(data) {
   const itemsBox = document.getElementById("items");
   const titleEl = document.getElementById("catTitle");
   if (!itemsBox) return;
 
   const slug = qs("cat");
-  const cat = data.find(c => norm(c.slug) === norm(slug));
+  const cat = findCategory(data, slug);
 
   if (!cat) {
-    itemsBox.innerHTML = "<p>Kategori bulunamadı</p>";
+    itemsBox.innerHTML = `<p style="text-align:center; opacity:.7;">Kategori bulunamadı.</p>`;
     return;
   }
 
-  if (titleEl) titleEl.textContent = cat.name;
+  // başlık
+  if (titleEl) titleEl.textContent = normTR(getTitle(cat));
 
+  // ✅ Kategori sayfası kart içi bg
+  // (slug bir main slug ise direkt map'ten bulur; değilse fallback)
+  setBgsBySlug(slug);
+
+  // ürünler
+  const items = sortItemsSafe(cat?.items || []);
   itemsBox.innerHTML = "";
 
-  (cat.products || []).forEach(it => {
+  for (const it of items) {
+    const name = normTR(it?.name || it?.["Ürün Adı"] || it?.["Urun Adi"] || "");
+    const desc = normTR(it?.desc || it?.descTR || it?.["Açıklama TR"] || it?.["Aciklama TR"] || "");
+    const price = formatPrice(it?.price || it?.priceText || it?.["Fiyat"] || it?.["Price"] || "");
+    const imgUrl = getProductImage(it);
+
     const card = document.createElement("article");
     card.className = "item";
 
     const left = document.createElement("div");
     left.className = "itemMain";
-
-    const name = document.createElement("h3");
-    name.className = "itemName";
-    name.textContent = it.name;
-    left.appendChild(name);
-
-    if (it.description_tr) {
-      const desc = document.createElement("p");
-      desc.className = "itemDesc";
-      desc.textContent = it.description_tr;
-      left.appendChild(desc);
-    }
+    left.innerHTML = `
+      <h3 class="itemName">${name}</h3>
+      ${desc ? `<p class="itemDesc">${desc}</p>` : ""}
+    `;
 
     const right = document.createElement("div");
     right.className = "itemRight";
 
-    const price = document.createElement("div");
-    price.className = "price";
-    price.textContent = it.price_display || "";
-    right.appendChild(price);
+    const p = document.createElement("div");
+    p.className = "price";
+    p.textContent = price;
+    right.appendChild(p);
 
-    if (it.image) {
+    if (imgUrl) {
       const img = document.createElement("img");
       img.className = "thumb";
-      img.src = it.image;
-      img.alt = it.name;
+      img.alt = name;
       img.loading = "lazy";
+      img.src = imgUrl;
       right.appendChild(img);
     }
 
     card.appendChild(left);
     card.appendChild(right);
     itemsBox.appendChild(card);
-  });
+  }
 }
 
 // ===== TO TOP =====
@@ -155,82 +261,38 @@ function setupToTop() {
   const btn = document.getElementById("toTopBtn");
   if (!btn) return;
 
-  btn.addEventListener("click", () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  });
+  btn.addEventListener("click", () =>
+    window.scrollTo({ top: 0, behavior: "smooth" })
+  );
 
-  window.addEventListener("scroll", () => {
-    btn.style.display = window.scrollY > 400 ? "block" : "none";
-  });
+  window.addEventListener(
+    "scroll",
+    () => {
+      btn.style.display = window.scrollY > 400 ? "block" : "none";
+    },
+    { passive: true }
+  );
 
   btn.style.display = "none";
 }
 
-// ===== INIT =====
-document.addEventListener("DOMContentLoaded", async () => {
+// ===== BOOT =====
+(async function init() {
   try {
     setupToTop();
-
     const data = await getMenu();
 
-    if (document.getElementById("categoryButtons")) {
-      renderIndex(data);
-    }
-
-    if (document.getElementById("subButtons")) {
-      renderSub(data);
-    }
-
-    if (document.getElementById("items")) {
-      renderCategory(data);
-    }
-
+    renderIndex(data);
+    renderSub(data);
+    renderCategory(data);
   } catch (e) {
     console.error(e);
-
     const box =
       document.getElementById("categoryButtons") ||
       document.getElementById("subButtons") ||
       document.getElementById("items");
-
     if (box) {
-      box.innerHTML = "<p style='color:red;text-align:center'>Yüklenemedi</p>";
+      box.innerHTML = `<p style="text-align:center; color:#a00;">Yüklenemedi. (API / veri hatası)</p>`;
     }
   }
-});
-
-function renderCategory(data) {
-  const itemsBox = document.getElementById("items");
-  const titleEl = document.getElementById("catTitle");
-  if (!itemsBox) return;
-
-  const slug = qs("cat");
-  const cat = data.find(c => norm(c.slug) === norm(slug));
-
-  if (!cat) {
-    itemsBox.innerHTML = "<p>Kategori bulunamadı</p>";
-    return;
-  }
-
-  if (titleEl) titleEl.textContent = cat.name;
-
-  itemsBox.innerHTML = "";
-
-  (cat.products || []).forEach(it => {
-    const card = document.createElement("article");
-    card.className = "item";
-
-    card.innerHTML = `
-      <div class="itemMain">
-        <h3 class="itemName">${it.name}</h3>
-        ${it.description_tr ? `<p class="itemDesc">${it.description_tr}</p>` : ""}
-      </div>
-      <div class="itemRight">
-        <div class="price">${it.price_display || ""}</div>
-        ${it.image ? `<img class="thumb" src="${it.image}" />` : ""}
-      </div>
-    `;
-
-    itemsBox.appendChild(card);
-  });
-}
+})();
