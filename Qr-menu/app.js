@@ -80,62 +80,38 @@ function renderSub(data) {
 }
 
 // ===== CATEGORY =====
-function renderCategory(data) {
-  const itemsBox = document.getElementById("items");
-  const titleEl = document.getElementById("catTitle");
-  if (!itemsBox) return;
+function renderIndex(data) {
+  const box = document.getElementById("categoryButtons");
+  if (!box) return;
 
-  const slug = qs("cat");
-  const cat = data.find(c => norm(c.slug) === norm(slug));
+  // SADECE ANA KATEGORİLER
+  const MAIN_CATEGORIES = [
+    "tatlilar",
+    "soguk-kahveler",
+    "sicak-kahveler",
+    "soguk-icecekler",
+    "sicak-icecekler",
+    "atistirmaliklar",
+    "sicak-matcha"
+  ];
 
-  if (!cat) {
-    itemsBox.innerHTML = "<p>Kategori bulunamadı</p>";
-    return;
-  }
+  box.innerHTML = "";
 
-  if (titleEl) titleEl.textContent = cat.name;
+  data.forEach(cat => {
+    if (!MAIN_CATEGORIES.includes(cat.slug)) return;
 
-  itemsBox.innerHTML = "";
+    const hasSubs = SUB_MAP[cat.slug]?.length > 0;
 
-  (cat.products || []).forEach(it => {
-    const card = document.createElement("article");
-    card.className = "item";
+    const href = hasSubs
+      ? `/sub.html?main=${cat.slug}`
+      : `/category/?cat=${cat.slug}`;
 
-    const left = document.createElement("div");
-    left.className = "itemMain";
+    const a = document.createElement("a");
+    a.className = "btn";
+    a.href = href;
+    a.textContent = cat.name;
 
-    const name = document.createElement("h3");
-    name.className = "itemName";
-    name.textContent = it.name;
-    left.appendChild(name);
-
-    if (it.description_tr) {
-      const desc = document.createElement("p");
-      desc.className = "itemDesc";
-      desc.textContent = it.description_tr;
-      left.appendChild(desc);
-    }
-
-    const right = document.createElement("div");
-    right.className = "itemRight";
-
-    const price = document.createElement("div");
-    price.className = "price";
-    price.textContent = it.price_display || "";
-    right.appendChild(price);
-
-    if (it.image) {
-      const img = document.createElement("img");
-      img.className = "thumb";
-      img.src = it.image;
-      img.alt = it.name;
-      img.loading = "lazy";
-      right.appendChild(img);
-    }
-
-    card.appendChild(left);
-    card.appendChild(right);
-    itemsBox.appendChild(card);
+    box.appendChild(a);
   });
 }
 
