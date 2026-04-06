@@ -1,16 +1,6 @@
 // ===== CONFIG =====
 const API_URL = "https://raw.githubusercontent.com/rachellkim/menu-json/main/menu.json";
 
-const MAIN_SLUGS = [
-  "tatlilar",
-  "soguk-kahveler",
-  "sicak-icecekler",
-  "sicak-kahveler",
-  "soguk-icecekler",
-  "atistirmaliklar",
-  "sicak-matcha",
-];
-
 const SUB_MAP = {
   "atistirmaliklar": [],
   "sicak-kahveler": ["espresso-bazli", "aromali-ozel-kahveler", "filtreturk", "sicak-matcha"],
@@ -26,31 +16,21 @@ const norm = (s) => String(s ?? "").trim().toLowerCase();
 
 // ===== FETCH =====
 async function getMenu() {
-  const res = await fetch(API_URL);
+  const res = await fetch(API_URL, { cache: "no-store" });
   if (!res.ok) throw new Error("Menu fetch error: " + res.status);
   const json = await res.json();
   return json.categories || [];
 }
 
-// ===== INDEX =====
+// ===== INDEX (OTOMATİK) =====
 function renderIndex(data) {
   const box = document.getElementById("categoryButtons");
   if (!box) return;
 
-  const catsBySlug = new Map(
-    data.map((c) => [norm(c.slug), c])
-  );
-
   box.innerHTML = "";
 
-  for (const slug of MAIN_SLUGS) {
-    const cat = catsBySlug.get(norm(slug));
-
-    if (!cat) {
-      console.warn("Kategori bulunamadı:", slug);
-      continue;
-    }
-
+  data.forEach(cat => {
+    const slug = cat.slug;
     const hasSubs = SUB_MAP[slug]?.length > 0;
 
     const href = hasSubs
@@ -63,7 +43,7 @@ function renderIndex(data) {
     a.textContent = cat.name;
 
     box.appendChild(a);
-  }
+  });
 }
 
 // ===== SUB PAGE =====
@@ -73,7 +53,7 @@ function renderSub(data) {
   if (!box) return;
 
   const mainSlug = qs("main");
-  const mainCat = data.find((c) => norm(c.slug) === norm(mainSlug));
+  const mainCat = data.find(c => norm(c.slug) === norm(mainSlug));
 
   if (!mainCat) return;
 
@@ -87,8 +67,8 @@ function renderSub(data) {
     return;
   }
 
-  for (const subSlug of subs) {
-    const cat = data.find((c) => norm(c.slug) === norm(subSlug));
+  subs.forEach(subSlug => {
+    const cat = data.find(c => norm(c.slug) === norm(subSlug));
 
     const a = document.createElement("a");
     a.className = "btn";
@@ -96,7 +76,7 @@ function renderSub(data) {
     a.textContent = cat ? cat.name : subSlug;
 
     box.appendChild(a);
-  }
+  });
 }
 
 // ===== CATEGORY =====
@@ -106,7 +86,7 @@ function renderCategory(data) {
   if (!itemsBox) return;
 
   const slug = qs("cat");
-  const cat = data.find((c) => norm(c.slug) === norm(slug));
+  const cat = data.find(c => norm(c.slug) === norm(slug));
 
   if (!cat) {
     itemsBox.innerHTML = "<p>Kategori bulunamadı</p>";
@@ -182,17 +162,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const data = await getMenu();
 
-    if (document.getElementById("categoryButtons")) {
-      renderIndex(data);
-    }
-
-    if (document.getElementById("subButtons")) {
-      renderSub(data);
-    }
-
-    if (document.getElementById("items")) {
-      renderCategory(data);
-    }
+    renderIndex(data);
+    renderSub(data);
+    renderCategory(data);
 
   } catch (e) {
     console.error(e);
